@@ -1,14 +1,15 @@
 import { useCallback, useState, useContext, createContext } from 'react'
 import './App.css'
 import {match, P} from 'ts-pattern'
+import {Alive} from "./Alive"
 
-type Action = {prompt: string, success: number, failure: number}
-const testActions = [
+export type Action = {prompt: string, success: number, failure: number}
+export const testActions = [
   {prompt: "You are in a forest you find a mushroom, eat it?", success: 10, failure: -25},
   {prompt: "You are in a supermarket, open the exit door?", success: 0, failure: -50},
 
 ]
-const stats = createContext<{health:number}>({health:100})
+export const stats = createContext<{health:number}>({health:100})
 
 function App() {
   const [health, setHealth] = useState(100)
@@ -27,55 +28,6 @@ function App() {
       </div>
    </stats.Provider>
   )
-}
-
-function Alive({updateHealth}:{updateHealth: (healthhealthDifference:number, health:number)=>void}){
-  const [prompt, setPrompt] = useState<string>(`You are in the middle of nowhere`)
-  const [mode, setMode] = useState<Action[] | 'talk'>(testActions)
-  return match(mode).with(
-   P.array({prompt:P.string, success: P.number, failure: P.number}),
-      (actions:Action[]) =>
-          <ActionMode
-              updateHealth={updateHealth}
-              prompt={prompt}
-              actions={actions}
-          /> 
-  ).with('talk', ()=><PromptMode prompt={prompt}/>)
-  .exhaustive()
-  
-
-}
-
-function PromptMode({prompt}:{prompt:string}){
-  const [input, setInput] = useState("")
-  return <div style={{padding: "1rem"}}>
-      <p>{prompt}</p>
-      <textarea onChange={e=>setInput(e.currentTarget.value)} value={input} cols={60} rows={5} />
-      <br/>
-      <button onClick={()=>console.log(input)}>Submit</button>
-      </div>
-}
-
-function ActionMode({prompt, actions, updateHealth}
-  :{prompt:string, actions:Action[], updateHealth: (healthhealthDifference:number, health:number)=>void}){
-
-
-  const {health} = useContext(stats)
-  const processAction = useCallback(function processAction(action:Action){
-    updateHealth(action.failure, health)
-  }, [health])
-    return (<>
-      <p>{prompt}</p>
-      <div>
-        {actions.map(action=>(
-          <>
-          <button onClick={()=>processAction(action)}>{action.prompt}</button>
-          <br/>
-          </>))
-          }
-      </div>
-    </>)
-
 }
 
 
