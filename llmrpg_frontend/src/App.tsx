@@ -1,6 +1,7 @@
-import {useState, createContext } from 'react'
+import {useState, createContext, useEffect } from 'react'
 import './App.css'
 import {Alive} from "./Alive"
+import {rules, story} from './prompts/background'
 
 export type Action = {prompt: string, success: number, failure: number}
 export type GameStats = {health: number}
@@ -14,8 +15,20 @@ export class GPTapi {
   constructor(apiKey: string){
     this._apiKey = apiKey
   }
+  async fetchGpt(ob:any){
+    const resp =  await fetch("/api/chatGPT",
+        {method:"POST",
+          headers:{
+            "Content-Type": "application/json"
+          },
+        body:JSON.stringify(ob)
+      })
+    return await resp.json()
+
+  }
   async request(userInput: string, userStats: GameStats):Promise<GamePhase>{
     console.debug(`calling chat gpt with ${userInput} and game stats ${JSON.stringify(userStats)}`)
+    this.fetchGpt({userInput, userStats, rules, story})
     return Math.random() > 0.75 ?
         {mode: 'talk', prompt: "A clerk talks to you"} :
         {mode: "action", prompt: "You are in a super market", actions: testActions}
@@ -26,8 +39,17 @@ const gptApi = new GPTapi("privte_key")
 
 function App() {
   const [health, setHealth] = useState(100)
-  const [gamePhase, setGamePhase] = useState<GamePhase | undefined>({mode: 'talk', prompt: "You are in a supermarket"})
-
+  const [gamePhase, setGamePhase] = useState<GamePhase | undefined>(undefined)
+  useEffect(()=>{
+    async function af(){
+      console.debug(`Fetching from chatGPT`)
+      const resp = await gptApi.fetchGpt({rules, story}) as unknown
+      console.debug(`on startup gpt answerd`, resp)
+      setGamePhase(resp as GamePhase)
+     
+    }
+    af()
+  }, [])
   /**
    * Called by game components whenever the user plays a round
    * @param actionDescription Describes what the user did during the round
