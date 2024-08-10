@@ -49,7 +49,9 @@ function ActionMode({prompt, actions, actionCallback}
 
   const gameStats = useContext(stats)
   const processAction = useCallback(function processAction(action:Action){
-    actionCallback(action.prompt, action.failure)
+    if (Math.random() * 100 > action.difficulty)
+          actionCallback(`The user chose '${action.prompt}', and succeeded`, action.success)
+    else actionCallback(`The user chose '${action.prompt}' and failed`, action.failure)
   }, [gameStats])
     return (<>
       <p>{prompt}</p>

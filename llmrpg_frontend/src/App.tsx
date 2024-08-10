@@ -3,10 +3,11 @@ import './App.css'
 import {Alive} from "./Alive"
 import {rules, story} from './prompts/background'
 
-export type Action = {prompt: string, success: number, failure: number}
+export type Action = {prompt: string, success: number, failure: number, difficulty: number}
 export type GameStats = {health: number}
 export type GamePhase = {mode: 'talk', prompt: string} |
                         {mode: "action", prompt: string, actions: Action[]}
+export type Interaction = {role: 'user' | 'assistant', content: string}
 
 export const stats = createContext<{health:number}>({health:100})
 
@@ -26,12 +27,9 @@ export class GPTapi {
     return await resp.json()
 
   }
-  async request(userInput: string, userStats: GameStats):Promise<GamePhase>{
-    console.debug(`calling chat gpt with ${userInput} and game stats ${JSON.stringify(userStats)}`)
-    this.fetchGpt({userInput, userStats, rules, story})
-    return Math.random() > 0.75 ?
-        {mode: 'talk', prompt: "A clerk talks to you"} :
-        {mode: "action", prompt: "You are in a super market", actions: testActions}
+  async request(userStats: GameStats, history:Interaction[]):Promise<GamePhase>{
+    const resp = await this.fetchGpt({history, userStats, rules, story})
+    return resp
   }
   
 }
@@ -39,11 +37,12 @@ const gptApi = new GPTapi("privte_key")
 
 function App() {
   const [health, setHealth] = useState(100)
+  const [actionHistory, setActionHistory] = useState<Interaction[]>([])
   const [gamePhase, setGamePhase] = useState<GamePhase | undefined>(undefined)
   useEffect(()=>{
     async function af(){
       console.debug(`Fetching from chatGPT`)
-      const resp = await gptApi.fetchGpt({rules, story}) as unknown
+      const resp = await gptApi.request({health}, actionHistory) as unknown
       console.debug(`on startup gpt answerd`, resp)
       setGamePhase(resp as GamePhase)
      
@@ -58,9 +57,12 @@ function App() {
   async function actionCallback(actionDescription:string, healthDifference:number){
     //update the stats
     const newHealth = Math.min(Math.max(health+healthDifference, 0), 100)
+    let newHistory:Interaction[] = [...actionHistory, {role: 'user', content: actionDescription}]
     //call chatGPT with the action description taken, and the new stats, and whether the user is dead or alive
     setHealth(newHealth)
-    const nextPhase = await gptApi.request(actionDescription, {health: newHealth})
+    const nextPhase = await gptApi.request({health: newHealth},newHistory)
+    newHistory.push({role:"assistant", content: nextPhase.prompt})
+    setActionHistory(newHistory)
     setGamePhase(nextPhase)
   }
 

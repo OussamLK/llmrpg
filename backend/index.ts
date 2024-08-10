@@ -8,10 +8,13 @@ app.use(express.json())
 
 
 app.post("/chatGPT", async (req, res)=>{
-    const {rules, story, userInput, userStats, history} = req.body
+    const {rules, story, userStats, history} = req.body
     const completion = await openAI.chat.completions.create({
         messages: [{role: "system", content: `${rules}, ${story}`},
-            {role: "assistant", content: "Let's start the game"}
+            {role: "system", content: "Let's start the game, mix talk and action rounds"},
+            ...history,
+            {role: "system", content: `Game stats are ${JSON.stringify(userStats)}`}
+            
         ],
         model: "gpt-4-1106-preview"
     })
