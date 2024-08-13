@@ -1,7 +1,8 @@
-import {useState, createContext, useEffect } from 'react'
+import {useState, createContext, useEffect, useContext } from 'react'
 import './App.css'
-import {Alive} from "./GamePlay/Alive"
 import { GameState, StoryRound, CombatRound } from './types'
+import { Inventory } from './Inventory'
+import Round from './Rounds/Round'
 
 const storyRound:StoryRound = {
   type:"story round",
@@ -56,23 +57,39 @@ const initialGameState : GameState = {
   }
 
 }
-export const gameStateContext = createContext<GameState>(initialGameState)
 
 
-function App() {
+export const gameStateContext = createContext(initialGameState)
 
-  const [gameState, setGameState] = useState(initialGameState)
-  function handleGameStateChange(newState:GameState){
-    setGameState(newState)
+
+/**
+ * Rendering when player is alive 
+ */
+export function App()
+  {
+  const [gameState, setGameState] = useState<GameState>(initialGameState);
+  function handleEquipWeapon(newWeapon:string){
+    setGameState({...gameState, playerStatus:{...gameState.playerStatus, equipedWeapon: newWeapon}})
   }
+  
+  return (gameState.playerStatus.health > 0 ?
+  <div className="app"><h1>Player Alive</h1>
+      <h2>Health {gameState.playerStatus.health}</h2>
+      <div className="canvas">
+        <gameStateContext.Provider value={gameState}>
+          <Round round={gameState.round.currentRound} />
+          <Inventory
+              onEquipWeapon={handleEquipWeapon}
+              equipedWeapon={gameState.playerStatus.equipedWeapon}
+              inventory={gameState.inventory}
+            />
+        </gameStateContext.Provider>
+      </div>
+  </div>: 
+  <Dead />
+)
 
-  return (
-    <gameStateContext.Provider value= {gameState}>
-      <Alive onGameStateChange={handleGameStateChange} />
-   </gameStateContext.Provider>
-  )
 }
-
 
 function Dead(){
   return <p>You died!</p>
