@@ -12,7 +12,7 @@ const combatRound: CombatRound = {
   type:"combat round",
   enemies: [
     {description:"clicker", health: 20, position:"far", attackType:"close"},
-    {description:"runner", health: 15, position:"far", attackType:"close"},
+    {description:"runner", health: 15, position:"close", attackType:"close"},
     {description:"runner", health: 12, position:"far", attackType:"close"},
     
   ]
@@ -48,7 +48,7 @@ const initialGameState : GameState = {
     count: 2,
     currentRound: {
       details: (
-        (Math.random()> .5)?
+        (Math.random()> 0)?
           combatRound
           : storyRound
         )

@@ -12,6 +12,7 @@ import Round from "../Rounds/Round";
 export function Alive(){
   const gameState = useContext(gameStateContext);
   return <div className="app"><h1>Player Alive</h1>
+      <h2>Health {gameState.playerStatus.health}</h2>
     <div className="canvas">
       <Round round={gameState.round.currentRound} />
       <Inventory equipedWeapon={gameState.playerStatus.equipedWeapon} inventory={gameState.inventory} />
