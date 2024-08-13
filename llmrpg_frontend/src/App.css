@@ -40,3 +40,8 @@
 .read-the-docs {
   color: #888;
 }
+
+.inventory{
+  border-style: solid;
+  border-width: .1em;
+}

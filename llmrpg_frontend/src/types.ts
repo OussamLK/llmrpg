@@ -55,3 +55,18 @@ export type KeyItem = {
     name: string,
     description: string
 }
+
+export type Inventory = {
+    weapons: (Weapon & {ammo: number})[]
+    keyItems: KeyItem[]
+    medicine: Medicine[]
+}
+
+export type PlayerStatus = {
+    health: number
+}
+
+export type GameState = {
+    inventory: Inventory
+    playerStatus: PlayerStatus
+}
