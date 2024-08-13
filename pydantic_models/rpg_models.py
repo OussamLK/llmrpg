@@ -41,8 +41,8 @@ class CombatRound(BaseModel):
 class Enemy(BaseModel):
 	description: str = Field(max_length=30)
 	health: int
-	position: Literal['close', 'distant']
-	equipment: Literal['melee', 'distant']
+	position: Literal['close', 'far']
+	attackType: Literal['close', 'far']
 
 class StoryRound(BaseModel):
 	type: Literal['story round']
