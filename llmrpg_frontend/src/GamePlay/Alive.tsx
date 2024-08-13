@@ -14,7 +14,7 @@ export function Alive(){
   return <div className="app"><h1>Player Alive</h1>
     <div className="canvas">
       <Round round={gameState.round.currentRound} />
-      <Inventory inventory={gameState.inventory} />
+      <Inventory equipedWeapon={gameState.playerStatus.equipedWeapon} inventory={gameState.inventory} />
     </div>
   </div>
 

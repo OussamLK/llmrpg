@@ -10,7 +10,12 @@ const storyRound:StoryRound = {
 
 const combatRound: CombatRound = {
   type:"combat round",
-  enemies: [{description:"goblin", health: 20, position:"far", attackType:"close"}]
+  enemies: [
+    {description:"clicker", health: 20, position:"far", attackType:"close"},
+    {description:"runner", health: 15, position:"far", attackType:"close"},
+    {description:"runner", health: 12, position:"far", attackType:"close"},
+    
+  ]
 }
 
 const initialGameState : GameState = {
@@ -22,12 +27,22 @@ const initialGameState : GameState = {
         damage: 30,
         details: {type: "distance", ammoName: "bullets"},
         ammo: 20
-      }],
+      },
+      {
+        type: 'weapon',
+        name:  "machete",
+        damage: 50,
+        details: {type: "melee", durability: 10},
+        ammo: null
+      },
+    
+    ],
     keyItems: [{type: "key item", name: "door key", description: "door key to your house"}],
     medicine: [{type: "medicine", name:"Pills", healthGain: 20}],
   },
   playerStatus:{
-    health: 100
+    health: 100,
+    equipedWeapon: "pistol"
   },
   round: {
     count: 2,

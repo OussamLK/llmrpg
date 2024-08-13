@@ -1,13 +1,16 @@
 import type { Inventory } from "../types";
 
 
-export function Inventory({ inventory }: { inventory: Inventory; }) {
+export function Inventory({ inventory, equipedWeapon }: { inventory: Inventory; equipedWeapon: string }) {
   return <div className="inventory">
     <h2>Inventory</h2>
     <h3>Weapons</h3>
     <ul>{inventory.weapons
       .map((weapon, i) => (
-        <li key={i}>{weapon.name} {weapon.details.type === "distance" && <span><strong>{weapon.ammo}</strong> {weapon.details.ammoName}</span>}&nbsp;<button>Use</button></li>)
+        <li key={i}>{weapon.name} &nbsp;
+          {weapon.details.type === "distance" &&
+            <span><strong>{weapon.ammo}</strong> {weapon.details.ammoName}</span>}&nbsp;
+            {equipedWeapon !== weapon.name?<button>Equip</button>: <span>(equiped)</span>}</li>)
 
       )}
     </ul>

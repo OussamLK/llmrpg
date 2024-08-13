@@ -57,13 +57,18 @@
 
 .inventory{
   flex:1;
+  height:60vh;
   border-style: solid;
   border-width: .1em;
   background-color: rgb(249, 233, 202);
   border-radius: 1em;
 }
+.inventory:hover{
+  flex:3;
+  height:60vh;
+}
 .round{
-  flex: 2;
+  flex: 3;
   border-style: solid;
   border-width: .1em;
   padding: 1em;
