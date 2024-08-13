@@ -1,7 +1,10 @@
 import type { Inventory } from "../types";
 
 
-export function Inventory({ inventory, equipedWeapon }: { inventory: Inventory; equipedWeapon: string }) {
+export function Inventory({ inventory, equipedWeapon, onEquipWeapon }:
+    { inventory: Inventory,
+      equipedWeapon: string,
+      onEquipWeapon: (weapon:string)=>void }) {
   return <div className="inventory">
     <h2>Inventory</h2>
     <h3>Weapons</h3>
@@ -10,7 +13,7 @@ export function Inventory({ inventory, equipedWeapon }: { inventory: Inventory; 
         <li key={i}>{weapon.name} &nbsp;
           {weapon.details.type === "distance" &&
             <span><strong>{weapon.ammo}</strong> {weapon.details.ammoName}</span>}&nbsp;
-            {equipedWeapon !== weapon.name?<button>Equip</button>: <span>(equiped)</span>}</li>)
+            {equipedWeapon !== weapon.name?<button onClick={()=>onEquipWeapon(weapon.name)}>Equip</button>: <span>(equiped)</span>}</li>)
 
       )}
     </ul>

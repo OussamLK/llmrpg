@@ -61,11 +61,14 @@ export const gameStateContext = createContext<GameState>(initialGameState)
 
 function App() {
 
-  const gameState = initialGameState;
+  const [gameState, setGameState] = useState(initialGameState)
+  function handleGameStateChange(newState:GameState){
+    setGameState(newState)
+  }
 
   return (
     <gameStateContext.Provider value= {gameState}>
-      <Alive />
+      <Alive onGameStateChange={handleGameStateChange} />
    </gameStateContext.Provider>
   )
 }
