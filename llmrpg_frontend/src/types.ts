@@ -1,5 +1,5 @@
 export type Round = {
-    detail: CombatRound | StoryRound
+    details: CombatRound | StoryRound
 }
 
 export type CombatRound = {
@@ -21,7 +21,7 @@ export type Enemy = {
 }
 
 export type Loot = {
-    detail: Weapon | Medicine | KeyItem | Ammo
+    details: Weapon | Medicine | KeyItem | Ammo
 }
 
 export type Weapon = {
@@ -68,5 +68,6 @@ export type PlayerStatus = {
 
 export type GameState = {
     inventory: Inventory
-    playerStatus: PlayerStatus
+    playerStatus: PlayerStatus,
+    round: {count: number, currentRound:Round}
 }

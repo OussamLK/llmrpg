@@ -41,7 +41,27 @@
   color: #888;
 }
 
+.app{
+  display: flex;
+  width: 80vw;
+  background-color: aquamarine;
+  padding: 2em;
+}
+
 .inventory{
+  flex:1;
   border-style: solid;
   border-width: .1em;
+  background-color: rgb(249, 233, 202);
+  border-radius: 1em;
+}
+.round{
+  flex: 2;
+  border-style: solid;
+  border-width: .1em;
+  padding: 1em;
+  margin: 1em;
+  background-color: rgb(132, 219, 219);
+  font-size: 1.2em;
+
 }

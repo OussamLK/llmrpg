@@ -1,7 +1,17 @@
 import {useState, createContext, useEffect } from 'react'
 import './App.css'
-import {Alive} from "./Alive"
-import { GameState } from './types'
+import {Alive} from "./GamePlay/Alive"
+import { GameState, StoryRound, CombatRound } from './types'
+
+const storyRound:StoryRound = {
+  type:"story round",
+  gamePrompt: "A test prompt for the mockup",
+  loot: null}
+
+const combatRound: CombatRound = {
+  type:"combat round",
+  enemies: [{description:"goblin", health: 20, position:"far", attackType:"close"}]
+}
 
 const initialGameState : GameState = {
   inventory: {
@@ -18,6 +28,16 @@ const initialGameState : GameState = {
   },
   playerStatus:{
     health: 100
+  },
+  round: {
+    count: 2,
+    currentRound: {
+      details: (
+        (Math.random()> .5)?
+          combatRound
+          : storyRound
+        )
+    }
   }
 
 }
