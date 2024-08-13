@@ -42,6 +42,13 @@
 }
 
 .app{
+  border-style: solid;
+  border-radius: 2em;
+  border-width: 1em;
+  background-color: rgb(218, 186, 186);
+}
+
+.canvas{
   display: flex;
   width: 80vw;
   background-color: aquamarine;

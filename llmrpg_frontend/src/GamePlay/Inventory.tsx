@@ -7,7 +7,8 @@ export function Inventory({ inventory }: { inventory: Inventory; }) {
     <h3>Weapons</h3>
     <ul>{inventory.weapons
       .map((weapon, i) => (
-        <li key={i}>{weapon.name} <button>Use</button></li>)
+        <li key={i}>{weapon.name} {weapon.details.type === "distance" && <span><strong>{weapon.ammo}</strong> {weapon.details.ammoName}</span>}&nbsp;<button>Use</button></li>)
+
       )}
     </ul>
     <h3>Medicine</h3>
