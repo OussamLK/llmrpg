@@ -36,7 +36,12 @@ function PromptMode({prompt, actionCallback}:{prompt:string, actionCallback: (ac
       <p>{prompt}</p>
       <textarea onChange={e=>setInput(e.currentTarget.value)} value={input} cols={60} rows={5} />
       <br/>
-      <button onClick={()=>actionCallback(input, 0)}>Submit</button>
+      <button onClick={
+            ()=>{actionCallback(input, 0)
+            setInput("");    
+            }}>
+                Submit
+      </button>
       </div>
 }
 
@@ -58,7 +63,7 @@ function ActionMode({prompt, actions, actionCallback}
       <div>
         {actions.map((action, i)=>(
           <div key={i}>
-          <button onClick={()=>processAction(action)}>{action.prompt}</button>
+          <button onClick={()=>processAction(action)}>{action.prompt} (difficulty: {action.difficulty}, success: {action.success}, failure: {-action.failure})</button>
           <br/>
           </div>))
           }

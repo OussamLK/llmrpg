@@ -10,5 +10,11 @@
     "openai": "^4.55.4",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.4"
+  },
+  "scripts": {
+    "dev": "yarn ts-node-dev --no-notify index.ts"
+  },
+  "dependencies": {
+    "redis": "^4.7.0"
   }
 }

@@ -10,6 +10,22 @@ where Action is {prompt:string, success: number, failure:number, difficulty: num
 The difficulty of the action is between 0 and 100, success is how much
 health the player wins in case of a success, failure is how much health the player loses
 in case of failure, it is a negative number, prompt is just an explanation of the choice to the user.
-`
 
-export const story = `The game is an rpg survival horror in a zombie apocalypse, it is called 'the first of us'`
+prompts should be relatively short, around 2 to 3 lines, and the tone is quite direct, think Harper Lee
+
+`
+const keyEvents = [
+    "You start in a quarantine zone",
+    "You get offered money to go find a missing part for generating electricty in the QZ",
+    "Along the way you get ambushed by raiders",
+    "You got help from a band of survivors who need help from you to save one of them's daughter"
+]
+
+const ROUNDS = 20;
+
+export const story = `The game is an rpg survival horror in a zombie apocalypse, it is called 'the first of us'
+key events to introduce in the story are ${keyEvents.map((event, i)=>`${i}) ${event}\n`)}
+
+the number of expected rounds in the entire game is around ${ROUNDS}
+
+`
