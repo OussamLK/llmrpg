@@ -14,6 +14,7 @@ export type StoryRound = {
 }
 
 export type Enemy = {
+    id: number
     description: string,
     health: number,
     position: 'close' | 'far'
@@ -32,11 +33,13 @@ export type Weapon = {
 }
 export type Melee = {
     type: 'melee',
-    durability: number
+    durability: number,
+    difficulty: number
 }
 export type Distance = {
     type: 'distance',
-    ammoName: string
+    ammoName: string,
+    difficulty: number
 }
 
 export type Medicine = {
@@ -72,3 +75,20 @@ export type GameState = {
     playerStatus: PlayerStatus,
     round: {count: number, currentRound:Round}
 }
+
+export type GameEvent = {type: 'action', details: PlayerAction} |
+                        {type: 'environment', details: EnvironmentEvent}
+
+export type PlayerAction = (
+    {type: 'attack', enemyId: number, damage: number} |
+    {type: 'move to enemy', enemyId: number} |
+    'retreat' |
+    'escape' |
+    {type: 'equip', itemName: string}
+)
+export type EnvironmentEvent = (
+    {type:'damage', healthLoss:number} |
+    {type: 'loot', receivedItem: Loot}
+)
+
+export type ReactStateSetter<T> = React.Dispatch<React.SetStateAction<T>>

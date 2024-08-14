@@ -1,35 +1,37 @@
-import { StoryRound, CombatRound, GameState } from "../types"
+import { Round, StoryRound, CombatRound, GameState } from "../types"
 
-const storyRound:StoryRound = {
+export const storyRound:StoryRound = {
   type:"story round",
   gamePrompt: "A test prompt for the mockup",
   loot: null}
 
-const combatRound: CombatRound = {
+export const combatRound: CombatRound = {
   type:"combat round",
   enemies: [
-    {description:"clicker", health: 100, position:"far", attackType:"close"},
-    {description:"runner", health: 75, position:"close", attackType:"close"},
-    {description:"runner", health: 60, position:"far", attackType:"close"},
+    {id: 1, description:"clicker", health: 100, position:"far", attackType:"close"},
+    {id: 2, description:"runner", health: 75, position:"close", attackType:"close"},
+    {id: 3, description:"runner", health: 60, position:"far", attackType:"close"},
     
   ]
 }
 
-export const initialGameState : GameState = {
+
+export function getInitialGameState(round:Round) : GameState {
+  return{
   inventory: {
     weapons: [
       {
         type: 'weapon',
         name:  "pistol",
         damage: 30,
-        details: {type: "distance", ammoName: "bullets"},
+        details: {type: "distance", ammoName: "bullets", difficulty: 30},
         ammo: 20
       },
       {
         type: 'weapon',
         name:  "machete",
         damage: 50,
-        details: {type: "melee", durability: 10},
+        details: {type: "melee", durability: 10, difficulty: 10},
         ammo: null
       },
     
@@ -43,13 +45,11 @@ export const initialGameState : GameState = {
   },
   round: {
     count: 2,
-    currentRound: {
-      details: (
-        (Math.random()> 0)?
-          combatRound
-          : storyRound
-        )
-    }
+    currentRound: round
+    
   }
+}
 
 }
+
+export const initialGameState =  getInitialGameState({details: combatRound})
