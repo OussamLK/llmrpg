@@ -39,8 +39,8 @@ export default class Engine{
     }
     async actionUpdate(action:PlayerAction){
         return match(action)
-        .with({type:'attack', enemyId: P.select('enemyId'), damage:P.select('damage') },
-            async ({enemyId, damage})=>await this._damageEnemy(enemyId, damage))
+        .with({type:'attack', enemyId: P.select()},
+            async (enemyId)=>await this._attackEnemy(enemyId))
         .with({type:'equip', itemName: P.select()}, itemName=>this._equipItem(itemName))
         .with({type:'move to enemy', enemyId: P.select()}, enemyId=>this._moveToEnemy(enemyId))
         .with('retreat', ()=>this._retreat())
@@ -48,7 +48,7 @@ export default class Engine{
         .exhaustive()
 
     }
-    async _damageEnemy(enemyId: number , damage: number):Promise<EngineGameStateUpdate>{
+    async _attackEnemy(enemyId: number):Promise<EngineGameStateUpdate>{
         const round = this.gameState.round.currentRound
         {
             //sanity checks
@@ -65,7 +65,7 @@ export default class Engine{
             newGameState: this.gameState,
             eventDescription: "action failed"
         }
-
+        const damage = this._getEquipedWeapon().damage
         const newEnemies = round.details.enemies.map(e=>{
             if (e.id !== enemyId) return e
             else return {...e, health: Math.max(0, e.health-damage)}

@@ -80,7 +80,7 @@ export type GameEvent = {type: 'action', details: PlayerAction} |
                         {type: 'environment', details: EnvironmentEvent}
 
 export type PlayerAction = (
-    {type: 'attack', enemyId: number, damage: number} |
+    {type: 'attack', enemyId: number} |
     {type: 'move to enemy', enemyId: number} |
     'retreat' |
     'escape' |
