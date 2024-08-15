@@ -1,6 +1,6 @@
 import {useState, createContext, useMemo, useCallback } from 'react'
 import './App.css'
-import { GameState } from './types'
+import { EngineGameState } from './types'
 import { Inventory } from './Inventory'
 import Round from './Rounds/Round'
 import { initialGameState as mockInitialGameState } from './mocks/gameStates'
@@ -9,7 +9,7 @@ export const gameStateContext = createContext(mockInitialGameState)
 
 export function App()
   {
-  const [gameState, setGameState] = useState<GameState>(mockInitialGameState);
+  const [gameState, setGameState] = useState<EngineGameState>(mockInitialGameState);
   const playerAlive = useMemo(()=>gameState.playerStatus.health > 0, [gameState])
   const handleEquipWeapon = useCallback(
     function handleEquipWeapon(newWeapon:string){

@@ -1,47 +1,146 @@
 import { 
-    GameState,
-    GameEvent,
-    PlayerAction,
-    EnvironmentEvent,
+    Inventory,
+    PlayerStatus,
+    Round,
     Weapon,
-    Enemy
+    Enemy,
+    Affordance,
+    InventoryAffordance,
+    UIGameState
 } from "./types";
 import {P, match} from 'ts-pattern';
-export type EngineGameStateUpdate = {newGameState: GameState, eventDescription: string} 
+export type EngineGameStateUpdate = {newGameState: EngineGameState, eventDescription: string} 
+
+export type EngineGameState = {
+    inventory: Inventory
+    playerStatus: PlayerStatus,
+    round: {count: number, currentRound:Round}
+}
+
+export type PlayerAction = (
+    {type: 'attack', enemyId: number} |
+    {type: 'move to enemy', enemyId: number} |
+    'retreat' |
+    'escape'
+)
 
 export function defaultDiceRoll(difficulty: number):boolean{
     return Math.random() * 100  > difficulty
 }
 
 export default class Engine{
-    gameState: GameState
-    requestNewRound: any
-    diceRoll: (difficulty: number)=>boolean
+    _gameState: EngineGameState
+    _requestNewRound: any
+    _diceRoll: (difficulty: number)=>boolean
     /**
      * 
      * @param initialGameState 
      * @param requestNewRound 
      * @param diceRoll tells you wether an action with difficulty 0-100 succeeds
      */
-    constructor(initialGameState:GameState, requestNewRound: any, diceRoll: (difficulty:number)=>boolean){
-        this.gameState = initialGameState
-        this.requestNewRound = requestNewRound
-        this.diceRoll = diceRoll
+    constructor(initialGameState:EngineGameState, requestNewRound: any, diceRoll: (difficulty:number)=>boolean){
+        this._gameState = initialGameState
+        this._requestNewRound = requestNewRound
+        this._diceRoll = diceRoll
     }
-    async update(event:GameEvent){
-        return match(event).with(
-            {type: 'action', details: P.select()},
-            async (action)=>await this.actionUpdate(action) 
-        ).with(
-            {type: 'environment', details: P.select()},
-            (event)=>this.environmentUpdate(event)
-        ).exhaustive()
+
+    /**
+     * Used by the UI at the beginning of the game
+     */
+    async currentGameState():Promise<UIGameState>{
+        const {round, playerStatus, inventory} = this._gameState
+        const roundAffordances = this._getRoundAffordances()
+        const inventoryAffordances = this._getInventoryAffordances()
+        return {playerStatus,
+                round: {...round, currentRound: {...round.currentRound, affordances: roundAffordances}},
+                inventory: {...inventory, affordances: inventoryAffordances}
+            }
     }
-    async actionUpdate(action:PlayerAction){
+
+    /**
+     * Used by UI to notify the engine of a player action
+     * @param actionId 
+     */
+    async actionUpdateId(actionId:number){
+        const action = this._getActionById(actionId)
+        return await this._actionUpdate(action)
+
+    }
+    /**
+     * Used by the inventory to notify the engine of an inventory action
+     * @param inventoryAction
+     */
+
+    async inventoryActionUpdate(inventoryAction:InventoryAffordance):Promise<UIGameState>{
+        throw("not implemented")
+    }
+    
+    _getRoundAffordances():Affordance[]{
+        const roundType = this._gameState.round.currentRound.details.type
+        return match(roundType)
+            .with('combat round', ()=> this._getAvailableActions().map(action=>this._createCombatAffordance(action)))
+            .with('story round', ()=>[])
+            .exhaustive()
+    }
+    
+    _getAvailableActions():PlayerAction[]{
+        const round = this._gameState.round.currentRound.details
+        return match(round)
+            .with({type: "combat round", enemies: P.select()}, enemies=>{
+                const wpeaonReachableEnemies: Enemy[] = enemies.filter(e=>this._weaponTypeMatchesEnemyPosition(e.id))
+                const attackActions:PlayerAction[] = wpeaonReachableEnemies.map(e=>({type:"attack", enemyId: e.id}))
+                const distantEnemies = enemies.filter(e=>e.position === 'far')
+                const moveToActions: PlayerAction[] = distantEnemies.map(e=>({
+                    type: 'move to enemy',
+                    enemyId: e.id
+                }))
+                const actions: PlayerAction[] = [
+                    ...attackActions,
+                    ...moveToActions,
+                    'escape',
+                    'retreat'
+                ]
+                return actions
+            })
+            .with({type: 'story round'}, ()=>{ return []}
+            ).exhaustive()
+    }
+
+
+    _createCombatAffordance(action:PlayerAction):Affordance{
+        return match(action)
+            .with({type: 'attack', enemyId: P.select()},
+                enemyId=>{
+                    const affordance: Affordance = {type:'enemy', enemyId, prompt: "attack", description: `Attack enemy ${enemyId}`}
+                    return affordance
+                })
+            .with('escape', ()=>{
+                const affordance: Affordance = {type: 'independent', prompt: 'escape', description: "Escape combat!"}
+                return affordance
+            
+            })
+            .with('retreat', ()=>{
+                const affordance : Affordance ={type: 'independent', prompt: 'retreat', description: "Retreat from enemies"}
+                return affordance
+            })
+            .with({type: 'move to enemy', enemyId: P.select()}, enemyId=>{
+                const affordance :Affordance ={type: 'enemy',enemyId, prompt: 'move to', description: `Get close to enemy ${enemyId}`}
+                return affordance
+            })
+            .exhaustive()
+    }
+
+    _getActionById(actionId:number):PlayerAction{
+        const action =  this._getAvailableActions()[actionId]
+        if (!action)
+            throw new Error(`Action ${actionId} not found`)
+        return action
+
+    }
+    async _actionUpdate(action:PlayerAction){
         return match(action)
         .with({type:'attack', enemyId: P.select()},
             async (enemyId)=>await this._attackEnemy(enemyId))
-        .with({type:'equip', itemName: P.select()}, itemName=>this._equipItem(itemName))
         .with({type:'move to enemy', enemyId: P.select()}, enemyId=>this._moveToEnemy(enemyId))
         .with('retreat', ()=>this._retreat())
         .with('escape', ()=>this._escape())
@@ -49,20 +148,20 @@ export default class Engine{
 
     }
     async _attackEnemy(enemyId: number):Promise<EngineGameStateUpdate>{
-        const round = this.gameState.round.currentRound
+        const round = this._gameState.round.currentRound
         {
             //sanity checks
             if (round.details.type !== 'combat round') throw("Can not attack in non combat rounds")
-            const attackPossible = this.weaponTypeMatchesEnemyPosition(enemyId) 
+            const attackPossible = this._weaponTypeMatchesEnemyPosition(enemyId) 
             if(! attackPossible) throw new Error("impossible to attack enemy with current weapon")
             const equipedWeapon = this._getEquipedWeapon()
             if (!equipedWeapon) throw new Error("can not find equiped weapon")
         }
 
-        const attackSucceeded = this.diceRoll(this._getEquipedWeapon().details.difficulty)
+        const attackSucceeded = this._diceRoll(this._getEquipedWeapon().details.difficulty)
         if (!attackSucceeded)
                 return {
-            newGameState: this.gameState,
+            newGameState: this._gameState,
             eventDescription: "action failed"
         }
         const damage = this._getEquipedWeapon().damage
@@ -71,21 +170,21 @@ export default class Engine{
             else return {...e, health: Math.max(0, e.health-damage)}
         })
         const enemiesAlive = newEnemies.filter(e=>e.health > 0)
-        if (enemiesAlive.length === 0) return await this.requestNewRound()
+        if (enemiesAlive.length === 0) return await this._requestNewRound()
         
-        const newGameState: GameState = {
-            ...this.gameState,
+        const newGameState: EngineGameState = {
+            ...this._gameState,
             round: {
-                ...this.gameState.round,
+                ...this._gameState.round,
                 currentRound: {
                     details: {
                         type: "combat round",
                         enemies: newEnemies}}}}
-        this.gameState = newGameState
+        this._gameState = newGameState
         return {newGameState, eventDescription: "action succeeded"}
     }
     getEnemyById(enemyId:number):Enemy| null{
-        const round = this.gameState.round.currentRound
+        const round = this._gameState.round.currentRound
         if (round.details.type !== "combat round") {
             console.group(`damageEnemy Error`)
             console.table(round)
@@ -97,13 +196,24 @@ export default class Engine{
         return enemy || null
 
     }
-    weaponTypeMatchesEnemyPosition(enemyId: number){
+    _weaponTypeMatchesEnemyPosition(enemyId: number){
         const enemy = this.getEnemyById(enemyId);
         if (!enemy) throw(`Can not find enemy ${enemyId}`)
         const equipedWeapon = this._getEquipedWeapon();
         return (equipedWeapon.details.type === 'distance' && enemy.position === 'far') ||
                equipedWeapon.details.type === 'melee' && enemy.position === 'close' 
 
+    }
+    _getInventoryAffordances():InventoryAffordance[]{
+        const {weapons, medicine, keyItems } = this._gameState.inventory;
+        function usableWeapon(weapon: Weapon & {ammo: number | null}){ return weapon.ammo === null || weapon.ammo !== 0}
+        const weaponAffordances: InventoryAffordance[] = weapons.map(
+            w=>{
+                if (usableWeapon(w)) return {itemName:w.name, prompts: ["equip", "discard"]}
+                else return {itemName: w.name, prompts: ['discard']}})
+        const medicieAffordances: InventoryAffordance[] = medicine.map(m=>({itemName:m.name, prompts:['use', 'discard']})) 
+        const keyItemsAffordances: InventoryAffordance[] = keyItems.map(m=>({itemName:m.name, prompts:[]}))
+        return [...weaponAffordances, ...medicieAffordances, ...keyItemsAffordances]
     }
     _equipItem(itemName:string){
         throw("not implemented")
@@ -121,16 +231,12 @@ export default class Engine{
 
     }
     _getEquipedWeapon():Weapon & {ammo:number | null;}{
-        const weapon =  this.gameState.inventory.weapons.find(w=>w.name === this.gameState.playerStatus.equipedWeapon)
+        const weapon =  this._gameState.inventory.weapons.find(w=>w.name === this._gameState.playerStatus.equipedWeapon)
         if (!weapon) {
-            console.error(`Can not find equiped weapon,`, this.gameState)
+            console.error(`Can not find equiped weapon,`, this._gameState)
             throw("Can not find equiped weapon")
         }
         return weapon
     }
 
-    async environmentUpdate(event:EnvironmentEvent){
-
-
-    }
 }

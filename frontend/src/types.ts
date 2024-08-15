@@ -10,7 +10,6 @@ export type CombatRound = {
 export type StoryRound = {
     type : 'story round',
     gamePrompt: string,
-    loot: Loot | null
 }
 
 export type Enemy = {
@@ -29,14 +28,14 @@ export type Weapon = {
     type: "weapon",
     name: string,
     damage: number,
-    details: Melee | Distance
+    details: Melee | DistanceWeapon
 }
 export type Melee = {
     type: 'melee',
     durability: number,
     difficulty: number
 }
-export type Distance = {
+export type DistanceWeapon = {
     type: 'distance',
     ammoName: string,
     difficulty: number
@@ -70,25 +69,33 @@ export type PlayerStatus = {
     equipedWeapon: string
 }
 
-export type GameState = {
-    inventory: Inventory
+
+export type UIGameState = {
+    inventory: UIInventory
     playerStatus: PlayerStatus,
-    round: {count: number, currentRound:Round}
+    round: {count: number, currentRound: UIRound}
 }
 
-export type GameEvent = {type: 'action', details: PlayerAction} |
-                        {type: 'environment', details: EnvironmentEvent}
+export type UIRound = Round & {affordances: Affordance[]}
 
-export type PlayerAction = (
-    {type: 'attack', enemyId: number} |
-    {type: 'move to enemy', enemyId: number} |
-    'retreat' |
-    'escape' |
-    {type: 'equip', itemName: string}
-)
-export type EnvironmentEvent = (
-    {type:'damage', healthLoss:number} |
-    {type: 'loot', receivedItem: Loot}
-)
+export type UIInventory = Inventory & {affordances: InventoryAffordance[]}
+
+
+
+export type Affordance = {
+    type: "enemy",
+    enemyId: number,
+    prompt: string,
+    description: string
+} | {
+    type: 'independent',
+    prompt: string,
+    description: string
+} 
+
+
+export type InventoryAffordance = {itemName: string, prompts: string[] }  
+
+export type InventoryAction = {itemName: string, action: string}
 
 export type ReactStateSetter<T> = React.Dispatch<React.SetStateAction<T>>

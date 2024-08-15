@@ -1,9 +1,9 @@
-import { Round, StoryRound, CombatRound, GameState } from "../types"
+import { Round, StoryRound, CombatRound } from "../types"
+import { EngineGameState } from "../engine"
 
 export const storyRound:StoryRound = {
   type:"story round",
-  gamePrompt: "A test prompt for the mockup",
-  loot: null}
+  gamePrompt: "A test prompt for the mockup"}
 
 export const combatRound: CombatRound = {
   type:"combat round",
@@ -16,7 +16,7 @@ export const combatRound: CombatRound = {
 }
 
 
-export function getInitialGameState(round:Round) : GameState {
+export function getInitialGameState(round:Round) : EngineGameState {
   return{
   inventory: {
     weapons: [

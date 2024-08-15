@@ -1,11 +1,21 @@
 import Engine from '../src/engine'
-import {getInitialGameState, initialGameState, combatRound, storyRound} from '../src/mocks/gameStates'
-import {GameEvent, PlayerAction} from '../src/types'
+import {getInitialGameState, initialGameState, combatRound} from '../src/mocks/gameStates'
+import {PlayerAction, EngineGameState} from '../src/engine'
 const combatState = getInitialGameState({details: combatRound})
 
 function requestingNewRound(){
     console.debug("requesting new round")
 }
+const engine = new Engine(combatState, requestingNewRound, ()=>true)
+
+describe("Engine Affordances", ()=>{
+    it("Combat affordances should be reachable enemies + 2", async ()=>{
+        const uiState = await engine.currentGameState()
+        expect(uiState).not.toBeNull()
+    })
+})
+
+
 
 let successEngine = new Engine(
     combatState,
@@ -20,7 +30,7 @@ let failureEngine = new Engine(
 
 function attackEnemyAction(enemyId:number){
 
-    const attackAction: GameEvent = {type:"action", details:{type:"attack", enemyId}}
+    const attackAction: PlayerAction = {type:"attack", enemyId}
     return attackAction
 }
 
@@ -37,23 +47,23 @@ describe("Engine attack", ()=>{
             ()=>false
         )
     })
-    it("weapon type should match enemy position", async ()=>{
+    it("Weapon type should match enemy position", async ()=>{
         await expect(successEngine._attackEnemy(2)).rejects.toThrow()
     })
-    it("equiped weapon and ammo helpers", async ()=>{
+    it("Equiped weapon and ammo helpers", async ()=>{
         const equipedWeapon = successEngine._getEquipedWeapon();
         expect(equipedWeapon.name).toBe(initialGameState.playerStatus.equipedWeapon)
         expect(equipedWeapon.ammo).toBe(20)
 
     })
-    it("successful attack should damage enemy" , async ()=>{
+    it("Successful attack should damage enemy" , async ()=>{
         const attackEnemy1 = attackEnemyAction(1)
-        await successEngine.update(attackEnemy1)
+        await successEngine._actionUpdate(attackEnemy1)
         const enemy = successEngine.getEnemyById(1)
         if (!enemy) throw("you should find enemy 1")
         expect(enemy.health).toBe(70);
     })
-    it("failed Attack should not change the state", async ()=>{
+    it("Failed attack should not change the state", async ()=>{
         const failureEngineState = await failureEngine._attackEnemy(1)
         expect(failureEngineState.newGameState).toEqual(combatState)
 
