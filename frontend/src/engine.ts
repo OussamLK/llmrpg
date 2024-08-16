@@ -1,4 +1,4 @@
-import { 
+import type { 
     Inventory,
     PlayerStatus,
     Round,
@@ -6,13 +6,15 @@ import {
     Enemy,
     Affordance,
     InventoryAffordance,
-    UIGameState
+    Frame,
+    FrameLegacy,
+    CombatRound
 } from "./types";
 import {P, match} from 'ts-pattern';
 export type EngineGameStateUpdate = {newGameState: EngineGameState, eventDescription: string} 
 
 export type EngineGameState = {
-    inventory: Inventory
+    inventory: Inventory,
     playerStatus: PlayerStatus,
     round: {count: number, currentRound:Round}
 }
@@ -32,6 +34,7 @@ export default class Engine{
     _gameState: EngineGameState
     _requestNewRound: any
     _diceRoll: (difficulty: number)=>boolean
+    _frameBuffer: Frame[]
     /**
      * 
      * @param initialGameState 
@@ -42,12 +45,38 @@ export default class Engine{
         this._gameState = initialGameState
         this._requestNewRound = requestNewRound
         this._diceRoll = diceRoll
+        this._frameBuffer = []
+    }
+
+    async getCurrentFrame():Promise<Frame>{
+        const {inventory, playerStatus, round} = this._gameState;
+        const roundDetails = round.currentRound.details
+        return match(roundDetails)
+            .with({type:'combat round', enemies:P.select()},
+                enemies=>{
+                const frame: Frame =  {
+                    inventory: {...inventory, affordances: this._getInventoryAffordances()},
+                    playerStatus,
+                    scene: {type: 'combat round', enemies, affordances: this._getRoundAffordances()}
+                }
+                return frame
+            })
+            .with({type:'story round', gamePrompt: P.select()},
+                gamePrompt=>(
+                    {inventory: {...inventory, affordances: this._getInventoryAffordances()},
+                    playerStatus,
+                    scene: {type: 'story round', prompt: gamePrompt, affordances: []}}
+               ))
+            .exhaustive()
+
+
     }
 
     /**
      * Used by the UI at the beginning of the game
+     * @deprecated
      */
-    async currentGameState():Promise<UIGameState>{
+    async currentGameState():Promise<FrameLegacy>{
         const {round, playerStatus, inventory} = this._gameState
         const roundAffordances = this._getRoundAffordances()
         const inventoryAffordances = this._getInventoryAffordances()
@@ -71,7 +100,7 @@ export default class Engine{
      * @param inventoryAction
      */
 
-    async inventoryActionUpdate(inventoryAction:InventoryAffordance):Promise<UIGameState>{
+    async inventoryActionUpdate(inventoryAction:InventoryAffordance):Promise<FrameLegacy>{
         throw("not implemented")
     }
     
@@ -207,9 +236,11 @@ export default class Engine{
     _getInventoryAffordances():InventoryAffordance[]{
         const {weapons, medicine, keyItems } = this._gameState.inventory;
         function usableWeapon(weapon: Weapon & {ammo: number | null}){ return weapon.ammo === null || weapon.ammo !== 0}
+        const equipedWeapon = this._gameState.playerStatus.equipedWeapon
         const weaponAffordances: InventoryAffordance[] = weapons.map(
             w=>{
-                if (usableWeapon(w)) return {itemName:w.name, prompts: ["equip", "discard"]}
+                if (usableWeapon(w) && w.name === equipedWeapon) return {itemName:w.name, prompts: ["discard"]}
+                else if (usableWeapon(w)) return {itemName:w.name, prompts:["equip", "discard"]}
                 else return {itemName: w.name, prompts: ['discard']}})
         const medicieAffordances: InventoryAffordance[] = medicine.map(m=>({itemName:m.name, prompts:['use', 'discard']})) 
         const keyItemsAffordances: InventoryAffordance[] = keyItems.map(m=>({itemName:m.name, prompts:[]}))

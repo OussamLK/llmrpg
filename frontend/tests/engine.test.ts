@@ -8,10 +8,10 @@ function requestingNewRound(){
 }
 const engine = new Engine(combatState, requestingNewRound, ()=>true)
 
-describe("Engine Affordances", ()=>{
+describe("Engine frames", ()=>{
     it("Combat affordances should be reachable enemies + 2", async ()=>{
-        const uiState = await engine.currentGameState()
-        expect(uiState).not.toBeNull()
+        const currentFrame = await engine.getCurrentFrame()
+        expect(currentFrame).not.toBeNull()
     })
 })
 

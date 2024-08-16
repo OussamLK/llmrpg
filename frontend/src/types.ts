@@ -69,14 +69,47 @@ export type PlayerStatus = {
     equipedWeapon: string
 }
 
-
-export type UIGameState = {
+/**
+ * @deprecated
+ */
+export type FrameLegacy = {
     inventory: UIInventory
     playerStatus: PlayerStatus,
     round: {count: number, currentRound: UIRound}
 }
+export type Frame = {
+    inventory: UIInventory
+    playerStatus: PlayerStatus,
+    scene: Scene
+}
+
+export type Scene = StoryScene | CombatScene | Event
+
+export type StoryScene = {
+    prompt: string
+}
+export type CombatScene = CombatRound & {affordances: Affordance[]}
+
+export type Event = RandomEvent | DeterministicEvent
+
+export type RandomEvent = {
+    probability: number,
+    prompt: string
+}
+
+export type DeterministicEvent = {
+    prompt: string
+}
+
+/**
+ * @deprecated
+ */
 
 export type UIRound = Round & {affordances: Affordance[]}
+
+/**
+ * @depricated
+ */
 
 export type UIInventory = Inventory & {affordances: InventoryAffordance[]}
 
