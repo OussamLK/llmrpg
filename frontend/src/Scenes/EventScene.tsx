@@ -1,4 +1,4 @@
-import type {EventScene, RandomEvent} from '../types'
+import type {EventScene, RandomEventScene} from '../types'
 import {useState} from 'react'
 export default function EventScene({scene}:{scene: EventScene}){
     return (
@@ -11,7 +11,7 @@ export default function EventScene({scene}:{scene: EventScene}){
 }
 
 
-export function RandomEvent({scene}:{scene:RandomEvent}){
+export function RandomEvent({scene}:{scene:RandomEventScene}){
     type RollState = 'prompt' | 'rolling' | 'rolled'
     const [lifeCycle, setLifeCycle] = useState<RollState>('prompt')
     function delayedRoll(){

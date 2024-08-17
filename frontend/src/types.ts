@@ -5,11 +5,13 @@ export type Round = {
 export type CombatRound = {
     type: 'combat round',
     enemies: Enemy[]
+    loot?: Loot[]
 }
 
 export type StoryRound = {
     type : 'story round',
     gamePrompt: string,
+    loot?: Loot
 }
 
 export type Enemy = {
@@ -94,9 +96,9 @@ export type CombatScene = {
     enemies: Enemy[],
     affordances: Affordance[]}
 
-export type EventScene = RandomEvent | DeterministicEvent
+export type EventScene = RandomEventScene | DeterministicEventScene
 
-export type RandomEvent = {
+export type RandomEventScene = {
     type: "random event"
     prompt: string,
     probability: number,
@@ -104,7 +106,7 @@ export type RandomEvent = {
     outcomeMessage: string
 }
 
-export type DeterministicEvent = {
+export type DeterministicEventScene = {
     type: "event"
     prompt: string
 }
@@ -140,3 +142,8 @@ export type InventoryAffordance = {itemName: string, prompts: string[] }
 export type InventoryAction = {itemName: string, action: string}
 
 export type ReactStateSetter<T> = React.Dispatch<React.SetStateAction<T>>
+
+/**
+ * The type for the LLM response
+ */
+export type Development = CombatRound | StoryRound

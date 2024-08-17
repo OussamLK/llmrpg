@@ -1,4 +1,4 @@
-import Engine from '../src/engine'
+import Engine, {Queue} from '../src/engine'
 import {getGameState, mockCombatState, combatRound} from '../src/mocks/gameStates'
 import {PlayerAction, EngineGameState} from '../src/engine'
 
@@ -7,6 +7,21 @@ function requestingNewRound(){
     console.debug("requesting new round")
 }
 const engine = new Engine(mockCombatState, requestingNewRound, ()=>true)
+
+describe("Queue works as expected", ()=>{
+    it('Queue push, pops, and gets, correctly', ()=>{
+        const queue = new Queue<number>()
+        expect(queue.pop()).toBeNull();
+        expect(queue.get()).toBeNull();
+        queue.push(1);
+        queue.push(2);
+        expect(queue.get()).toBe(1);
+        expect(queue.pop()).toBe(1);
+        expect(queue.pop()).toBe(2);
+        expect(queue.get()).toBeNull();
+        expect(queue.pop()).toBeNull();
+    })
+} )
 
 describe("Engine frames", ()=>{
     it("Combat affordances should be reachable enemies + 2", async ()=>{

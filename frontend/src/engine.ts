@@ -30,11 +30,28 @@ export function defaultDiceRoll(difficulty: number):boolean{
     return Math.random() * 100  > difficulty
 }
 
+export class Queue<T>{
+    items: T[]
+    constructor(){
+        this.items = []
+    }
+    push(item:T){
+        this.items.push(item)
+    }
+    get(){
+        return this.items[0] || null
+    }
+    pop(){
+            return this.items.splice(0,1)[0] || null
+    }
+}
+
+
 export default class Engine{
     _gameState: EngineGameState
     _requestNewRound: any
     _diceRoll: (difficulty: number)=>boolean
-    _frameBuffer: Frame[]
+    _frameBuffer: Queue<Frame>
     /**
      * 
      * @param initialGameState 
@@ -45,7 +62,7 @@ export default class Engine{
         this._gameState = initialGameState
         this._requestNewRound = requestNewRound
         this._diceRoll = diceRoll
-        this._frameBuffer = []
+        this._frameBuffer = new Queue<Frame>()
     }
 
     async getCurrentFrame():Promise<Frame>{
