@@ -57,16 +57,17 @@ export default class Engine{
                 const frame: Frame =  {
                     inventory: {...inventory, affordances: this._getInventoryAffordances()},
                     playerStatus,
-                    scene: {type: 'combat round', enemies, affordances: this._getRoundAffordances()}
+                    scene: {type: 'combat scene', enemies, affordances: this._getRoundAffordances()}
                 }
                 return frame
             })
             .with({type:'story round', gamePrompt: P.select()},
-                gamePrompt=>(
-                    {inventory: {...inventory, affordances: this._getInventoryAffordances()},
+                gamePrompt=>{
+                   const frame: Frame = {inventory: {...inventory, affordances: this._getInventoryAffordances()},
                     playerStatus,
-                    scene: {type: 'story round', prompt: gamePrompt, affordances: []}}
-               ))
+                    scene: {type: 'story scene', prompt: gamePrompt}}
+                    return frame
+                })
             .exhaustive()
 
 

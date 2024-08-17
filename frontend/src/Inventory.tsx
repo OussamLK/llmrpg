@@ -6,7 +6,7 @@ export function Inventory({ inventory, equipedWeapon, onClick }:
       equipedWeapon: string,
       onClick: (args:{itemName:string, affordance:string})=>void }) {
         console.clear();
-        console.table(inventory.affordances[0])
+        console.table(inventory.affordances)
 
         return <div className="inventory">
           <h2>Inventory</h2>

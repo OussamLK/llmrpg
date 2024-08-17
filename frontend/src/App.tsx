@@ -3,7 +3,7 @@ import './App.css'
 import Engine, {defaultDiceRoll } from './engine'
 import type {Frame} from './types'
 import { Inventory } from './Inventory'
-import Round from './Rounds/Round'
+import Scene from './Scenes/Scene'
 import { initialGameState as mockInitialGameState } from './mocks/gameStates'
 
 export const gameStateContext = createContext(mockInitialGameState)
@@ -18,10 +18,13 @@ export function App(){
 
   return frame ? <div className="app">
       <h1>Alive health {frame.playerStatus.health}</h1>
+      <div className="canvas">
+      <Scene scene={frame.scene}/>
       <Inventory
         inventory={frame?.inventory}
         equipedWeapon={frame.playerStatus.equipedWeapon}
         onClick={({itemName, affordance})=>{console.debug(`${affordance} - ${itemName}`)}}/>
+      </div>
       </div> : <p>loading...</p>
 }
 

@@ -86,18 +86,24 @@ export type Frame = {
 export type Scene = StoryScene | CombatScene | Event
 
 export type StoryScene = {
+    type: 'story scene'
     prompt: string
 }
-export type CombatScene = CombatRound & {affordances: Affordance[]}
+export type CombatScene = {
+    type: "combat scene",
+    enemies: Enemy[],
+    affordances: Affordance[]}
 
 export type Event = RandomEvent | DeterministicEvent
 
 export type RandomEvent = {
+    type: "event"
     probability: number,
     prompt: string
 }
 
 export type DeterministicEvent = {
+    type: "event"
     prompt: string
 }
 

@@ -46,6 +46,7 @@
   border-radius: 2em;
   border-width: 1em;
   background-color: rgb(218, 186, 186);
+  padding: 1em;
 }
 
 .canvas{
@@ -67,7 +68,7 @@
   flex:3;
   height:60vh;
 }
-.round{
+.scene{
   flex: 3;
   border-style: solid;
   border-width: .1em;
