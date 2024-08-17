@@ -8,7 +8,7 @@ import type {
     InventoryAffordance,
     Frame,
     FrameLegacy,
-    CombatRound
+    Scene
 } from "./types";
 import {P, match} from 'ts-pattern';
 export type EngineGameStateUpdate = {newGameState: EngineGameState, eventDescription: string} 
@@ -49,7 +49,30 @@ export default class Engine{
     }
 
     async getCurrentFrame():Promise<Frame>{
-        const {inventory, playerStatus, round} = this._gameState;
+        const scene: Scene = "random"==="random" ?
+        {
+            type: 'random event',
+            prompt: "You are about to open a chest",
+            probability: 60,
+            diceOutcome: 50,
+            outcomeMessage: "You found nothing"
+        }
+                :  
+                {
+                    type: 'event',
+                    prompt: "a normal event"
+                }; 
+        return {
+            inventory :{...this._gameState.inventory, affordances: this._getInventoryAffordances()},
+            playerStatus: this._gameState.playerStatus,
+            scene
+        }
+
+
+    }
+
+    _getFrameFromGameState(gameState:EngineGameState):Frame{
+        const {inventory, playerStatus, round} = gameState;
         const roundDetails = round.currentRound.details
         return match(roundDetails)
             .with({type:'combat round', enemies:P.select()},

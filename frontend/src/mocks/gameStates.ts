@@ -16,7 +16,7 @@ export const combatRound: CombatRound = {
 }
 
 
-export function getInitialGameState(round:Round) : EngineGameState {
+export function getGameState(round:Round) : EngineGameState {
   return{
   inventory: {
     weapons: [
@@ -52,4 +52,5 @@ export function getInitialGameState(round:Round) : EngineGameState {
 
 }
 
-export const initialGameState =  getInitialGameState({details: combatRound})
+export const mockCombatState =  getGameState({details: combatRound})
+export const mockStoryState = getGameState({details: storyRound})

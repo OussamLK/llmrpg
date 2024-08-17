@@ -1,13 +1,12 @@
-import {useState, createContext, useMemo, useCallback, useEffect } from 'react'
+import {useState, useEffect } from 'react'
 import './App.css'
 import Engine, {defaultDiceRoll } from './engine'
 import type {Frame} from './types'
 import { Inventory } from './Inventory'
 import Scene from './Scenes/Scene'
-import { initialGameState as mockInitialGameState } from './mocks/gameStates'
+import { mockCombatState, mockStoryState } from './mocks/gameStates'
 
-export const gameStateContext = createContext(mockInitialGameState)
-const engine = new Engine(mockInitialGameState, ()=>{}, defaultDiceRoll)
+const engine = new Engine(mockStoryState, ()=>{}, defaultDiceRoll)
 export function App(){
   const [frame, setFrame] = useState<Frame | undefined>()
   const setCurrentFrame = async ()=>{

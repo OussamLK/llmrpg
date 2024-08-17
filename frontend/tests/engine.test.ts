@@ -1,12 +1,12 @@
 import Engine from '../src/engine'
-import {getInitialGameState, initialGameState, combatRound} from '../src/mocks/gameStates'
+import {getGameState, mockCombatState, combatRound} from '../src/mocks/gameStates'
 import {PlayerAction, EngineGameState} from '../src/engine'
-const combatState = getInitialGameState({details: combatRound})
+
 
 function requestingNewRound(){
     console.debug("requesting new round")
 }
-const engine = new Engine(combatState, requestingNewRound, ()=>true)
+const engine = new Engine(mockCombatState, requestingNewRound, ()=>true)
 
 describe("Engine frames", ()=>{
     it("Combat affordances should be reachable enemies + 2", async ()=>{
@@ -18,12 +18,12 @@ describe("Engine frames", ()=>{
 
 
 let successEngine = new Engine(
-    combatState,
+    mockCombatState,
     requestingNewRound,
     ()=>true
 )
 let failureEngine = new Engine(
-    combatState,
+    mockCombatState,
     requestingNewRound,
     ()=>false
 )
@@ -37,12 +37,12 @@ function attackEnemyAction(enemyId:number){
 describe("Engine attack", ()=>{
     beforeAll(()=>{
         successEngine = new Engine(
-            combatState,
+            mockCombatState,
             requestingNewRound,
             ()=>true
         )
         failureEngine = new Engine(
-            combatState,
+            mockCombatState,
             requestingNewRound,
             ()=>false
         )
@@ -52,7 +52,7 @@ describe("Engine attack", ()=>{
     })
     it("Equiped weapon and ammo helpers", async ()=>{
         const equipedWeapon = successEngine._getEquipedWeapon();
-        expect(equipedWeapon.name).toBe(initialGameState.playerStatus.equipedWeapon)
+        expect(equipedWeapon.name).toBe(mockCombatState.playerStatus.equipedWeapon)
         expect(equipedWeapon.ammo).toBe(20)
 
     })
@@ -65,7 +65,7 @@ describe("Engine attack", ()=>{
     })
     it("Failed attack should not change the state", async ()=>{
         const failureEngineState = await failureEngine._attackEnemy(1)
-        expect(failureEngineState.newGameState).toEqual(combatState)
+        expect(failureEngineState.newGameState).toEqual(mockCombatState)
 
     })
 
