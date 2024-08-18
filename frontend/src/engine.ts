@@ -1,3 +1,4 @@
+import LLMConnector from "./LLMConnector";
 import type { 
     Inventory,
     PlayerStatus,
@@ -13,48 +14,11 @@ import type {
     StoryInput
 } from "./types";
 import {P, match} from 'ts-pattern';
-export type EngineGameStateUpdate = {newGameState: EngineGameState, eventDescription: string} 
-
-export type EngineGameState = {
-    inventory: Inventory,
-    playerStatus: PlayerStatus,
-    round: {count: number, currentRound:Round}
-}
-
-export type PlayerAction = (
-    {type: 'attack', enemyId: number} |
-    {type: 'move to enemy', enemyId: number} |
-    'retreat' |
-    'escape'
-)
-
-export function defaultDiceRoll(difficulty: number):boolean{
-    return Math.random() * 100  > difficulty
-}
-
-export class Buffer<T>{
-    private _frames: {[id:number]:T}
-    private _nextAvailableId: number
-    constructor(){
-        this._frames = []
-        this._nextAvailableId = 0
-    }
-    push(item:T){
-        this._frames[this._nextAvailableId] = item;
-        this._nextAvailableId++
-    }
-    get(frameId:number){
-        return this._frames[frameId] || null
-    }
-    private _empty(exceptId:number){
-        this._frames = {[exceptId]:this._frames[exceptId]}
-    }
-}
 
 
 export default class Engine{
     private _gameState: EngineGameState
-    private _requestNewRound: any
+    private _llmConnector: LLMConnector
     private _diceRoll: (difficulty: number)=>boolean
     private _frameBuffer: Buffer<Frame>
     /**
@@ -63,9 +27,9 @@ export default class Engine{
      * @param requestNewRound 
      * @param diceRoll tells you wether an action with difficulty 0-100 succeeds
      */
-    constructor(initialGameState:EngineGameState, requestNewRound: any, diceRoll: (difficulty:number)=>boolean){
+    constructor(initialGameState:EngineGameState, llmConnector: LLMConnector, diceRoll: (difficulty:number)=>boolean){
         this._gameState = initialGameState
-        this._requestNewRound = requestNewRound
+        this._llmConnector = llmConnector
         this._diceRoll = diceRoll
         this._frameBuffer = new Buffer<Frame>()
         //testing
@@ -127,7 +91,10 @@ export default class Engine{
                     prompt: "a normal event"
                 }; 
         return {
-            inventory :{...this._gameState.inventory, affordances: null},
+            inventory :{
+                ...this._gameState.inventory,
+                affordances: null //player can not use inventory during events
+            }, 
             playerStatus: this._gameState.playerStatus,
             scene
         }
@@ -231,7 +198,7 @@ export default class Engine{
         .exhaustive()
 
     }
-    private async _attackEnemy(enemyId: number):Promise<EngineGameStateUpdate>{
+    private async _attackEnemy(enemyId: number):Promise<EngineGameState>{
         const round = this._gameState.round.currentRound
         {
             //sanity checks
@@ -244,17 +211,15 @@ export default class Engine{
 
         const attackSucceeded = this._diceRoll(this._getEquipedWeapon().details.difficulty)
         if (!attackSucceeded)
-                return {
-            newGameState: this._gameState,
-            eventDescription: "action failed"
-        }
+                return this._gameState
+    
         const damage = this._getEquipedWeapon().damage
         const newEnemies = round.details.enemies.map(e=>{
             if (e.id !== enemyId) return e
             else return {...e, health: Math.max(0, e.health-damage)}
         })
         const enemiesAlive = newEnemies.filter(e=>e.health > 0)
-        if (enemiesAlive.length === 0) return await this._requestNewRound()
+        if (enemiesAlive.length === 0) return await this._nextGameState()
         
         const newGameState: EngineGameState = {
             ...this._gameState,
@@ -265,7 +230,7 @@ export default class Engine{
                         type: "combat round",
                         enemies: newEnemies}}}}
         this._gameState = newGameState
-        return {newGameState, eventDescription: "action succeeded"}
+        return newGameState
     }
     private _weaponTypeMatchesEnemyPosition(enemyId: number){
         const enemy = this._getEnemyById(enemyId);
@@ -324,5 +289,45 @@ export default class Engine{
         throw("not implemented")
 
     }
+    private _nextGameState():EngineGameState{
+        throw("not yet implemented")
+    }
 
 }
+
+export function defaultDiceRoll(difficulty: number):boolean{
+    return Math.random() * 100  > difficulty
+}
+
+export class Buffer<T>{
+    private _frames: {[id:number]:T}
+    private _nextAvailableId: number
+    constructor(){
+        this._frames = []
+        this._nextAvailableId = 0
+    }
+    push(item:T){
+        this._frames[this._nextAvailableId] = item;
+        this._nextAvailableId++
+    }
+    get(frameId:number){
+        return this._frames[frameId] || null
+    }
+    private _empty(exceptId:number){
+        this._frames = {[exceptId]:this._frames[exceptId]}
+    }
+}
+
+
+export type EngineGameState = {
+    inventory: Inventory,
+    playerStatus: PlayerStatus,
+    round: {count: number, currentRound:Round}
+}
+
+export type PlayerAction = (
+    {type: 'attack', enemyId: number} |
+    {type: 'move to enemy', enemyId: number} |
+    'retreat' |
+    'escape'
+)
