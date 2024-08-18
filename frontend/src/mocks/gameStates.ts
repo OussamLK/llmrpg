@@ -1,4 +1,4 @@
-import { Round, StoryRound, CombatRound, UIInventory, Inventory } from "../types"
+import { Round, StoryRound, CombatRound, FrameInventory, Inventory } from "../types"
 import { EngineGameState } from "../engine"
 
 export const storyRound:StoryRound = {

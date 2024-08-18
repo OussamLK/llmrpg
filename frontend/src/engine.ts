@@ -2,7 +2,9 @@ import LLMConnector from "./LLMConnector";
 import type { 
     Inventory,
     PlayerStatus,
-    Round,
+    Medicine,
+    Ammo,
+    KeyItem,
     Weapon,
     Enemy,
     Affordance,
@@ -102,7 +104,7 @@ export default class Engine{
 
     private _getFrameFromGameState(gameState:EngineGameState):Frame{
         const {inventory, playerStatus, round} = gameState;
-        const roundDetails = round.currentRound.details
+        const roundDetails = round.details
         return match(roundDetails)
             .with({type:'combat round', enemies:P.select()},
                 enemies=>{
@@ -127,7 +129,7 @@ export default class Engine{
 
     
     private _getRoundAffordances():Affordance[]{
-        const roundType = this._gameState.round.currentRound.details.type
+        const roundType = this._gameState.round.details.type
         return match(roundType)
             .with('combat round', ()=> this._getAvailableActions().map(action=>this._createCombatAffordance(action)))
             .with('story round', ()=>[])
@@ -135,7 +137,7 @@ export default class Engine{
     }
     
     private _getAvailableActions():PlayerAction[]{
-        const round = this._gameState.round.currentRound.details
+        const round = this._gameState.round.details
         return match(round)
             .with({type: "combat round", enemies: P.select()}, enemies=>{
                 const wpeaonReachableEnemies: Enemy[] = enemies.filter(e=>this._weaponTypeMatchesEnemyPosition(e.id))
@@ -199,7 +201,7 @@ export default class Engine{
 
     }
     private async _attackEnemy(enemyId: number):Promise<EngineGameState>{
-        const round = this._gameState.round.currentRound
+        const round = this._gameState.round
         {
             //sanity checks
             if (round.details.type !== 'combat round') throw("Can not attack in non combat rounds")
@@ -223,12 +225,11 @@ export default class Engine{
         
         const newGameState: EngineGameState = {
             ...this._gameState,
-            round: {
-                ...this._gameState.round,
-                currentRound: {
+            round: 
+                 {
                     details: {
                         type: "combat round",
-                        enemies: newEnemies}}}}
+                        enemies: newEnemies},}}
         this._gameState = newGameState
         return newGameState
     }
@@ -249,7 +250,7 @@ export default class Engine{
         return weapon
     }
     private _getEnemyById(enemyId:number):Enemy| null{
-        const round = this._gameState.round.currentRound
+        const round = this._gameState.round
         if (round.details.type !== "combat round") {
             console.group(`damageEnemy Error`)
             console.table(round)
@@ -319,10 +320,35 @@ export class Buffer<T>{
 }
 
 
+export type Loot = {
+    details: Weapon | Medicine | KeyItem | Ammo
+}
+
+export type Round = {
+    details: CombatRound | StoryRound
+}
+
+export type CombatRound = {
+    type: 'combat round',
+    enemies: Enemy[]
+    loot?: Loot[]
+}
+
+export type StoryRound = {
+    type : 'story round',
+    gamePrompt: string,
+    loot?: Loot
+}
+
+export type EnemyTurn = number
+export type Turn = 'player' | EnemyTurn
+
+
 export type EngineGameState = {
     inventory: Inventory,
     playerStatus: PlayerStatus,
-    round: {count: number, currentRound:Round}
+    round: Round
+    roundCount: number
 }
 
 export type PlayerAction = (

@@ -1,8 +1,8 @@
-import type { InventoryAffordance, UIInventory, Weapon, Medicine, KeyItem } from "./types";
+import type { InventoryAffordance, FrameInventory, Weapon, Medicine, KeyItem } from "./types";
 
 
 export function Inventory({ inventory, equipedWeapon, onClick }:
-    { inventory: UIInventory,
+    { inventory: FrameInventory,
       equipedWeapon: string,
       onClick: (args:{itemName:string, affordance:string})=>void }) {
         const active = inventory.affordances !== null

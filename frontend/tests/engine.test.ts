@@ -2,11 +2,14 @@ import Engine, {Buffer} from '../src/engine'
 import {getGameState, mockCombatState, combatRound} from '../src/mocks/gameStates'
 import {PlayerAction, EngineGameState} from '../src/engine'
 
+import {MockLLMConnector} from '../src/LLMConnector'
+const mockLLMConnector = new MockLLMConnector()
+
 
 function requestingNewRound(){
     console.debug("requesting new round")
 }
-const engine = new Engine(mockCombatState, requestingNewRound, ()=>true)
+const engine = new Engine(mockCombatState, mockLLMConnector, ()=>true)
 
 describe("Queue works as expected", ()=>{
     it('Queue push, pops, and gets, correctly', ()=>{
@@ -30,12 +33,12 @@ describe("Engine frames", ()=>{
 
 let successEngine = new Engine(
     mockCombatState,
-    requestingNewRound,
+    mockLLMConnector,
     ()=>true
 )
 let failureEngine = new Engine(
     mockCombatState,
-    requestingNewRound,
+    mockLLMConnector,
     ()=>false
 )
 
@@ -49,12 +52,12 @@ describe("Engine attack", ()=>{
     beforeAll(()=>{
         successEngine = new Engine(
             mockCombatState,
-            requestingNewRound,
+            mockLLMConnector,
             ()=>true
         )
         failureEngine = new Engine(
             mockCombatState,
-            requestingNewRound,
+            mockLLMConnector,
             ()=>false
         )
     })

@@ -1,29 +1,9 @@
-export type Round = {
-    details: CombatRound | StoryRound
-}
-
-export type CombatRound = {
-    type: 'combat round',
-    enemies: Enemy[]
-    loot?: Loot[]
-}
-
-export type StoryRound = {
-    type : 'story round',
-    gamePrompt: string,
-    loot?: Loot
-}
-
 export type Enemy = {
     id: number
     description: string,
     health: number,
     position: 'close' | 'far'
     attackType: 'close' | 'far' 
-}
-
-export type Loot = {
-    details: Weapon | Medicine | KeyItem | Ammo
 }
 
 export type Weapon = {
@@ -71,8 +51,11 @@ export type PlayerStatus = {
     equipedWeapon: string
 }
 
+
+export type FrameInventory = Inventory & {affordances: InventoryAffordance[] | null}
+
 export type Frame = {
-    inventory: UIInventory
+    inventory: FrameInventory
     playerStatus: PlayerStatus,
     scene: Scene
 }
@@ -108,19 +91,6 @@ export type DeterministicEventScene = {
     prompt: string
 }
 
-/**
- * @deprecated
- */
-
-export type UIRound = Round & {affordances: Affordance[]}
-
-/**
- * @depricated
- */
-
-export type UIInventory = Inventory & {affordances: InventoryAffordance[] | null}
-
-
 
 export type Affordance = {
     type: "enemy",
@@ -139,8 +109,3 @@ export type InventoryAffordance = {itemName: string, prompts: string[] }
 export type InventoryInput = {itemName: string, action: string}
 
 export type ReactStateSetter<T> = React.Dispatch<React.SetStateAction<T>>
-
-/**
- * The type for the LLM response
- */
-export type StoryDevelopment = CombatRound | StoryRound
