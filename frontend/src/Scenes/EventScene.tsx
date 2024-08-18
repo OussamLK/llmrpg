@@ -1,17 +1,20 @@
 import type {EventScene, RandomEventScene} from '../types'
 import {useState} from 'react'
-export default function EventScene({scene}:{scene: EventScene}){
+export default function EventScene({scene, onFinish}:{scene: EventScene, onFinish:()=>void}){
     return (
     <div className='scene'>
         {scene.type === 'random event' ? 
-            <RandomEvent scene={scene} />
+            <RandomEvent onFinish={onFinish} scene={scene} />
         :
-            <p>Event: {scene.prompt} </p>}
+            <>
+                <p>Event: {scene.prompt} </p>
+                <button onClick={onFinish}>Next</button>
+            </>}
     </div>)
 }
 
 
-export function RandomEvent({scene}:{scene:RandomEventScene}){
+export function RandomEvent({scene, onFinish}:{scene:RandomEventScene, onFinish:()=>void}){
     type RollState = 'prompt' | 'rolling' | 'rolled'
     const [lifeCycle, setLifeCycle] = useState<RollState>('prompt')
     function delayedRoll(){
@@ -35,6 +38,7 @@ export function RandomEvent({scene}:{scene:RandomEventScene}){
         return <>
             <p>Result </p>
             <p style={{fontSize:"1.2em"}}><strong>{scene.diceOutcome}</strong>: {scene.outcomeMessage}</p>
+            <button onClick={onFinish}>Next</button>
             </>
     }
 

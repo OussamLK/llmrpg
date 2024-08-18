@@ -1,4 +1,4 @@
-import { Round, StoryRound, CombatRound } from "../types"
+import { Round, StoryRound, CombatRound, UIInventory, Inventory } from "../types"
 import { EngineGameState } from "../engine"
 
 export const storyRound:StoryRound = {
@@ -15,10 +15,7 @@ export const combatRound: CombatRound = {
   ]
 }
 
-
-export function getGameState(round:Round) : EngineGameState {
-  return{
-  inventory: {
+export const mockInventory:Inventory ={ 
     weapons: [
       {
         type: 'weapon',
@@ -38,11 +35,16 @@ export function getGameState(round:Round) : EngineGameState {
     ],
     keyItems: [{type: "key item", name: "door key", description: "door key to your house"}],
     medicine: [{type: "medicine", name:"Pills", healthGain: 20}],
-  },
-  playerStatus:{
+}
+export const mockPlayerStatus = {
     health: 100,
     equipedWeapon: "pistol"
-  },
+  }
+
+export function getGameState(round:Round) : EngineGameState {
+  return{
+  inventory: mockInventory,
+  playerStatus: mockPlayerStatus,
   round: {
     count: 2,
     currentRound: round

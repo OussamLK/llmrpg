@@ -1,17 +1,25 @@
-import type {StoryScene } from "../types"
-export default function StoryScene({scene}:{scene: StoryScene}){
+import { useState } from "react"
+import type {StoryScene, StoryInput } from "../types"
+export default function StoryScene(
+    {scene, onInput}
+    :{scene: StoryScene, onInput:(input:StoryInput)=>void}){
+        const [input, setInput]=useState("")
     return <div className='scene'>
                 <p>{scene.prompt}</p>
                 <label>
                     <textarea
                         placeholder="What do you do?"
-                        value={""}
+                        value={input}
                         cols={50}
                         rows={5}
                         style={{fontFamily: "sans-serif", fontSize:"1em"}}
+                        onChange={e=>setInput(e.currentTarget.value)}
                         />
                 </label>
                 <br/>
-                <button style={{padding: ".3em 1em " , margin: "1em"}}>Enter</button>
+                <button
+                    onClick={()=>onInput(input)}
+                    style={{padding: ".3em 1em " , margin: "1em"}}
+                >Enter</button>
             </div>
 }

@@ -1,6 +1,6 @@
-import { Development } from "./types";
+import { StoryDevelopment} from "./types";
 export default class LLMConnector{
-    requestDevelopment():Development{
+    async requestStoryDevelopment():Promise<StoryDevelopment>{
        throw("not implemented") 
     }
     reportEvent(eventDescription:string){

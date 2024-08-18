@@ -7,8 +7,10 @@ import type {
     Affordance,
     InventoryAffordance,
     Frame,
-    FrameLegacy,
-    Scene
+    Scene,
+    CombatInput,
+    InventoryInput,
+    StoryInput
 } from "./types";
 import {P, match} from 'ts-pattern';
 export type EngineGameStateUpdate = {newGameState: EngineGameState, eventDescription: string} 
@@ -30,28 +32,31 @@ export function defaultDiceRoll(difficulty: number):boolean{
     return Math.random() * 100  > difficulty
 }
 
-export class Queue<T>{
-    items: T[]
+export class Buffer<T>{
+    private _frames: {[id:number]:T}
+    private _nextAvailableId: number
     constructor(){
-        this.items = []
+        this._frames = []
+        this._nextAvailableId = 0
     }
     push(item:T){
-        this.items.push(item)
+        this._frames[this._nextAvailableId] = item;
+        this._nextAvailableId++
     }
-    get(){
-        return this.items[0] || null
+    get(frameId:number){
+        return this._frames[frameId] || null
     }
-    pop(){
-            return this.items.splice(0,1)[0] || null
+    private _empty(exceptId:number){
+        this._frames = {[exceptId]:this._frames[exceptId]}
     }
 }
 
 
 export default class Engine{
-    _gameState: EngineGameState
-    _requestNewRound: any
-    _diceRoll: (difficulty: number)=>boolean
-    _frameBuffer: Queue<Frame>
+    private _gameState: EngineGameState
+    private _requestNewRound: any
+    private _diceRoll: (difficulty: number)=>boolean
+    private _frameBuffer: Buffer<Frame>
     /**
      * 
      * @param initialGameState 
@@ -62,11 +67,53 @@ export default class Engine{
         this._gameState = initialGameState
         this._requestNewRound = requestNewRound
         this._diceRoll = diceRoll
-        this._frameBuffer = new Queue<Frame>()
+        this._frameBuffer = new Buffer<Frame>()
+        //testing
+        this._frameBuffer.push(this._createEventFrame("random"))
+        this._frameBuffer.push(this._createEventFrame("event"))
+        this._frameBuffer.push(this._getFrameFromGameState(this._gameState))
     }
 
-    async getCurrentFrame():Promise<Frame>{
-        const scene: Scene = "random"==="random" ?
+    async getFrame(frameId:number):Promise<Frame>{
+        const frame = this._frameBuffer.get(frameId)
+        if (!frame) throw("should not be null")
+        return frame
+    }
+
+    /**
+     * Used by UI to notify the engine of a player action
+     * @param actionId 
+     */
+    combatInput(input:CombatInput){
+        console.group("combat input")
+        console.debug("Got combat input notification from UI")
+        console.table(input)
+        console.groupEnd()
+    }
+
+    storyInput(input: StoryInput){
+        console.group("story input")
+        console.debug("Got story input notification from UI", input)
+        console.table(input)
+        console.groupEnd()
+    }
+
+    inventoryInput(input: InventoryInput){
+        console.group("inventory input")
+        console.debug("Got inventory input notification from UI")
+        console.table(input)
+        console.groupEnd()
+    }
+
+
+
+    /**
+     * just for testing
+     * @returns @deprecated
+     */
+    private _createEventFrame(type:string):Frame{
+
+        const scene: Scene = "random"===type ?
         {
             type: 'random event',
             prompt: "You are about to open a chest",
@@ -80,15 +127,13 @@ export default class Engine{
                     prompt: "a normal event"
                 }; 
         return {
-            inventory :{...this._gameState.inventory, affordances: this._getInventoryAffordances()},
+            inventory :{...this._gameState.inventory, affordances: null},
             playerStatus: this._gameState.playerStatus,
             scene
         }
-
-
     }
 
-    _getFrameFromGameState(gameState:EngineGameState):Frame{
+    private _getFrameFromGameState(gameState:EngineGameState):Frame{
         const {inventory, playerStatus, round} = gameState;
         const roundDetails = round.currentRound.details
         return match(roundDetails)
@@ -113,39 +158,8 @@ export default class Engine{
 
     }
 
-    /**
-     * Used by the UI at the beginning of the game
-     * @deprecated
-     */
-    async currentGameState():Promise<FrameLegacy>{
-        const {round, playerStatus, inventory} = this._gameState
-        const roundAffordances = this._getRoundAffordances()
-        const inventoryAffordances = this._getInventoryAffordances()
-        return {playerStatus,
-                round: {...round, currentRound: {...round.currentRound, affordances: roundAffordances}},
-                inventory: {...inventory, affordances: inventoryAffordances}
-            }
-    }
-
-    /**
-     * Used by UI to notify the engine of a player action
-     * @param actionId 
-     */
-    async actionUpdateId(actionId:number){
-        const action = this._getActionById(actionId)
-        return await this._actionUpdate(action)
-
-    }
-    /**
-     * Used by the inventory to notify the engine of an inventory action
-     * @param inventoryAction
-     */
-
-    async inventoryActionUpdate(inventoryAction:InventoryAffordance):Promise<FrameLegacy>{
-        throw("not implemented")
-    }
     
-    _getRoundAffordances():Affordance[]{
+    private _getRoundAffordances():Affordance[]{
         const roundType = this._gameState.round.currentRound.details.type
         return match(roundType)
             .with('combat round', ()=> this._getAvailableActions().map(action=>this._createCombatAffordance(action)))
@@ -153,7 +167,7 @@ export default class Engine{
             .exhaustive()
     }
     
-    _getAvailableActions():PlayerAction[]{
+    private _getAvailableActions():PlayerAction[]{
         const round = this._gameState.round.currentRound.details
         return match(round)
             .with({type: "combat round", enemies: P.select()}, enemies=>{
@@ -177,7 +191,7 @@ export default class Engine{
     }
 
 
-    _createCombatAffordance(action:PlayerAction):Affordance{
+    private _createCombatAffordance(action:PlayerAction):Affordance{
         return match(action)
             .with({type: 'attack', enemyId: P.select()},
                 enemyId=>{
@@ -200,14 +214,14 @@ export default class Engine{
             .exhaustive()
     }
 
-    _getActionById(actionId:number):PlayerAction{
+    private _getActionById(actionId:number):PlayerAction{
         const action =  this._getAvailableActions()[actionId]
         if (!action)
             throw new Error(`Action ${actionId} not found`)
         return action
 
     }
-    async _actionUpdate(action:PlayerAction){
+    private async _actionUpdate(action:PlayerAction){
         return match(action)
         .with({type:'attack', enemyId: P.select()},
             async (enemyId)=>await this._attackEnemy(enemyId))
@@ -217,7 +231,7 @@ export default class Engine{
         .exhaustive()
 
     }
-    async _attackEnemy(enemyId: number):Promise<EngineGameStateUpdate>{
+    private async _attackEnemy(enemyId: number):Promise<EngineGameStateUpdate>{
         const round = this._gameState.round.currentRound
         {
             //sanity checks
@@ -253,7 +267,23 @@ export default class Engine{
         this._gameState = newGameState
         return {newGameState, eventDescription: "action succeeded"}
     }
-    getEnemyById(enemyId:number):Enemy| null{
+    private _weaponTypeMatchesEnemyPosition(enemyId: number){
+        const enemy = this._getEnemyById(enemyId);
+        if (!enemy) throw(`Can not find enemy ${enemyId}`)
+        const equipedWeapon = this._getEquipedWeapon();
+        return (equipedWeapon.details.type === 'distance' && enemy.position === 'far') ||
+               equipedWeapon.details.type === 'melee' && enemy.position === 'close' 
+
+    }
+    private _getEquipedWeapon():Weapon & {ammo:number | null;}{
+        const weapon =  this._gameState.inventory.weapons.find(w=>w.name === this._gameState.playerStatus.equipedWeapon)
+        if (!weapon) {
+            console.error(`Can not find equiped weapon,`, this._gameState)
+            throw("Can not find equiped weapon")
+        }
+        return weapon
+    }
+    private _getEnemyById(enemyId:number):Enemy| null{
         const round = this._gameState.round.currentRound
         if (round.details.type !== "combat round") {
             console.group(`damageEnemy Error`)
@@ -266,15 +296,7 @@ export default class Engine{
         return enemy || null
 
     }
-    _weaponTypeMatchesEnemyPosition(enemyId: number){
-        const enemy = this.getEnemyById(enemyId);
-        if (!enemy) throw(`Can not find enemy ${enemyId}`)
-        const equipedWeapon = this._getEquipedWeapon();
-        return (equipedWeapon.details.type === 'distance' && enemy.position === 'far') ||
-               equipedWeapon.details.type === 'melee' && enemy.position === 'close' 
-
-    }
-    _getInventoryAffordances():InventoryAffordance[]{
+    private _getInventoryAffordances():InventoryAffordance[]{
         const {weapons, medicine, keyItems } = this._gameState.inventory;
         function usableWeapon(weapon: Weapon & {ammo: number | null}){ return weapon.ammo === null || weapon.ammo !== 0}
         const equipedWeapon = this._gameState.playerStatus.equipedWeapon
@@ -287,28 +309,20 @@ export default class Engine{
         const keyItemsAffordances: InventoryAffordance[] = keyItems.map(m=>({itemName:m.name, prompts:[]}))
         return [...weaponAffordances, ...medicieAffordances, ...keyItemsAffordances]
     }
-    _equipItem(itemName:string){
+    private _equipItem(itemName:string){
         throw("not implemented")
     }
-    _moveToEnemy(enemyId:number){
-        throw("not implemented")
-
-    }
-    _retreat(){
+    private _moveToEnemy(enemyId:number){
         throw("not implemented")
 
     }
-    _escape(){
+    private _retreat(){
         throw("not implemented")
 
     }
-    _getEquipedWeapon():Weapon & {ammo:number | null;}{
-        const weapon =  this._gameState.inventory.weapons.find(w=>w.name === this._gameState.playerStatus.equipedWeapon)
-        if (!weapon) {
-            console.error(`Can not find equiped weapon,`, this._gameState)
-            throw("Can not find equiped weapon")
-        }
-        return weapon
+    private _escape(){
+        throw("not implemented")
+
     }
 
 }

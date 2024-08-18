@@ -1,9 +1,12 @@
-import type { CombatScene } from "../types"
+import type { CombatInput, CombatScene } from "../types"
 import type { Enemy } from "../types"
 
 
 
-export default function CombatScene({scene}:{scene: CombatScene}){
+export default function CombatScene(
+        {scene, onInput} :
+        {scene: CombatScene, onInput:(input:CombatInput)=>void}){
+
     const indepedentAffordances = scene.affordances.filter(aff=>aff.type === 'independent')
     function getEnemyAffordance(enemyId:number){
         return scene.affordances.filter(aff=>aff.type === 'enemy' && aff.enemyId === enemyId)
@@ -14,13 +17,18 @@ export default function CombatScene({scene}:{scene: CombatScene}){
         <ul>
             {scene.enemies.map(enemy=>{
                const affordances = getEnemyAffordance(enemy.id)
-                .map(aff=><button style={{margin: ".3em"}}>{aff.prompt}</button>)
+                .map(aff=><button
+                            key={aff.prompt}
+                            onClick={()=>onInput({enemyId:enemy.id, action:aff.prompt})}
+                            style={{margin: ".3em"}}>
+                                {aff.prompt}
+                            </button>)
                return  <li style={{margin:"1em"}} key={enemy.id}>
                     <Enemy details={enemy}/>{affordances}
                 </li>
             })}
         </ul>
-        {indepedentAffordances.map(aff=>(<button title={aff.description} style={{margin: ".3em"}}>{aff.prompt}</button>))}
+        {indepedentAffordances.map(aff=>(<button key={aff.prompt} onClick={()=>onInput({action:aff.prompt})} title={aff.description} style={{margin: ".3em"}}>{aff.prompt}</button>))}
     </div>)
 }
 

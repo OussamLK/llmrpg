@@ -71,14 +71,6 @@ export type PlayerStatus = {
     equipedWeapon: string
 }
 
-/**
- * @deprecated
- */
-export type FrameLegacy = {
-    inventory: UIInventory
-    playerStatus: PlayerStatus,
-    round: {count: number, currentRound: UIRound}
-}
 export type Frame = {
     inventory: UIInventory
     playerStatus: PlayerStatus,
@@ -91,10 +83,15 @@ export type StoryScene = {
     type: 'story scene'
     prompt: string
 }
+
+export type StoryInput = string
+
 export type CombatScene = {
     type: "combat scene",
     enemies: Enemy[],
     affordances: Affordance[]}
+
+export type CombatInput = {enemyId:number, action:string} | {action:string}
 
 export type EventScene = RandomEventScene | DeterministicEventScene
 
@@ -121,7 +118,7 @@ export type UIRound = Round & {affordances: Affordance[]}
  * @depricated
  */
 
-export type UIInventory = Inventory & {affordances: InventoryAffordance[]}
+export type UIInventory = Inventory & {affordances: InventoryAffordance[] | null}
 
 
 
@@ -139,11 +136,11 @@ export type Affordance = {
 
 export type InventoryAffordance = {itemName: string, prompts: string[] }  
 
-export type InventoryAction = {itemName: string, action: string}
+export type InventoryInput = {itemName: string, action: string}
 
 export type ReactStateSetter<T> = React.Dispatch<React.SetStateAction<T>>
 
 /**
  * The type for the LLM response
  */
-export type Development = CombatRound | StoryRound
+export type StoryDevelopment = CombatRound | StoryRound
