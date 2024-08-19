@@ -1,10 +1,10 @@
 import Engine, {Buffer} from '../src/engine'
-import {getGameState, mockCombatState, combatRound} from '../src/mocks/gameStates'
-import {PlayerAction, EngineGameState} from '../src/engine'
+import {getGameState, mockCombatState as mockCombatState_, combatRound} from '../src/mocks/gameStates'
+import {PlayerAction, GameState} from '../src/engine'
 
 import {MockLLMConnector} from '../src/LLMConnector'
 const mockLLMConnector = new MockLLMConnector()
-
+const mockCombatState = (async ()=>mockCombatState_)()
 
 function requestingNewRound(){
     console.debug("requesting new round")

@@ -104,6 +104,8 @@ export type Affordance = {
 } 
 
 
+export type PlayerInput = CombatInput | StoryInput | InventoryInput
+
 export type InventoryAffordance = {itemName: string, prompts: string[] }  
 
 export type InventoryInput = {itemName: string, action: string}
