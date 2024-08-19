@@ -86,8 +86,9 @@ export default class Engine{
     async _currentStateRequiresInput():Promise<boolean>{
         const round = (await this._gameState).round
         const playerTurn = round.type === 'combat round' && round.turn === 'player'
-        const storyPrompt = round.type === 'story round' && round.loot === null
+        const storyPrompt = round.type === 'story round' && (!round.loot)
         const answer = playerTurn || storyPrompt
+        console.trace(`state requiest input? ${answer} in state`, JSON.stringify(round))
         return answer
     }
 
