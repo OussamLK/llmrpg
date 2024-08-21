@@ -1,11 +1,11 @@
 
-import {GameState, StoryRound, Loot} from './engine'
-export type StoryDevelopment = GameState
+import { GameStateData, StoryRound, Loot } from "./engine/types"
+export type StoryDevelopment = GameStateData
 import { mockCombatState, mockStoryState} from './mocks/gameStates'
 
 const gamePad:Loot = {type:"key item", name:"game pad", description:"A playstation game pad"}
 const storyRound:StoryRound = mockStoryState.round as StoryRound
-const lootState:GameState = {
+const lootState:GameStateData = {
     ...mockStoryState,
     round:{
         ...storyRound,
@@ -23,7 +23,7 @@ export default interface LLMConnector {
 export class MockLLMConnector implements LLMConnector{
 
     events: string[]
-    gameStates: GameState[]
+    gameStates: GameStateData[]
     constructor(){
         this.events = []
         this.gameStates = [mockCombatState, mockStoryState, lootState]

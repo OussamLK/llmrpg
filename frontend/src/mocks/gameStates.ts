@@ -1,5 +1,5 @@
 import {FrameInventory, Inventory } from "../types"
-import { GameState, StoryRound, CombatRound, Round } from "../engine"
+import { GameStateData, StoryRound, CombatRound, Round } from "../engine/types"
 
 export const storyRound:StoryRound = {
   type:"story round",
@@ -8,9 +8,9 @@ export const storyRound:StoryRound = {
 export const combatRound: CombatRound = {
   type:"combat round",
   enemies: [
-    {id: 1, description:"clicker", health: 100, position:"far", attackType:"close"},
-    {id: 2, description:"runner", health: 75, position:"close", attackType:"close"},
-    {id: 3, description:"runner", health: 60, position:"far", attackType:"close"},
+    {id: 1, description:"clicker", health: 100, position:"close", attackType:"close", accuracy: 70, attackDamage: 30},
+    {id: 2, description:"runner", health: 75, position:"close", attackType:"close", accuracy: 70, attackDamage: 10},
+    {id: 3, description:"runner", health: 60, position:"far", attackType:"close", accuracy: 70, attackDamage: 10},
     
   ],
   turn: 'player'
@@ -42,7 +42,7 @@ export const mockPlayerStatus = {
     equipedWeapon: "pistol"
   }
 
-export function getGameState(round:Round) : GameState {
+export function getGameState(round:Round) : GameStateData {
   return{
   inventory: mockInventory,
   playerStatus: mockPlayerStatus,

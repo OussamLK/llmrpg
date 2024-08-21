@@ -936,6 +936,11 @@
   dependencies:
     "@babel/types" "^7.20.7"
 
+"@types/distributions@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@types/distributions/-/distributions-2.0.2.tgz#3212e80d9f594ec0c01433a9cbd90e5d09e1ad1f"
+  integrity sha512-9izKdZDwHIZQIh/qWvC/Wl0RO6YF/tTfISuS7U+fF9gYUGA4QbquRxyd4EKVWsxAcd24z7JYSsfWfVd2SJUMHQ==
+
 "@types/estree@1.0.5":
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.5.tgz#a6ce3e556e00fd9895dd872dd172ad0d4bd687f4"
@@ -1327,6 +1332,11 @@ caniuse-lite@^1.0.30001646:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001651.tgz#52de59529e8b02b1aedcaaf5c05d9e23c0c28138"
   integrity sha512-9Cf+Xv1jJNe1xPZLGuUXLNkE1BoDkqRqYyFJ9TDYSqhduqA4hu4oR9HluGoWYQC/aj8WHjsGVV+bwkh0+tegRg==
 
+cephes@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/cephes/-/cephes-2.0.0.tgz#31d5d86d5af29c08ce2bea496d5d243b4cdbb42a"
+  integrity sha512-4GMUzkcXHZ0HMZ3gZdBrv8pQs1/zkJh2Q9rQOF8NJZHanM359y3XOSdeqmDBPfxQKYQpJt58R3dUpofrIXJ2mg==
+
 chalk@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.4.2.tgz#cd42541677a54333cf541a49108c1432b44c9424"
@@ -1477,6 +1487,13 @@ dir-glob@^3.0.1:
   integrity sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==
   dependencies:
     path-type "^4.0.0"
+
+distributions@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/distributions/-/distributions-2.2.0.tgz#1b5852bb241498eb3aeb5f12db43eb103dbe5572"
+  integrity sha512-n7ybud+CRAOZlpg+ETuA0PTiSBfyVNt8Okns5gSK4NvHwj7RamQoufptOucvVcTn9CV4DZ38p1k6TgwMexUNkQ==
+  dependencies:
+    cephes "^2.0.0"
 
 ejs@^3.1.10:
   version "3.1.10"

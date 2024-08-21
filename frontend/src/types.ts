@@ -3,6 +3,8 @@ export type Enemy = {
     description: string,
     health: number,
     position: 'close' | 'far'
+    attackDamage: number,
+    accuracy: number
     attackType: 'close' | 'far' 
 }
 
