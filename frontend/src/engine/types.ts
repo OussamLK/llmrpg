@@ -61,7 +61,7 @@ export class Buffer<T> {
 
 export type EnemyTurn = number;
 
-export type Turn = 'player' | EnemyTurn;
+export type Turn = 'player' | EnemyTurn | 'win' | 'game over';
 
 export type Loot = Weapon | Medicine | KeyItem | Ammo;
 
