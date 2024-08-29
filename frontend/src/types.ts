@@ -92,7 +92,7 @@ export type CombatScene = {
     enemies: Enemy[],
     affordances: Affordance[]}
 
-export type CombatInput = {enemyId:number, action:string} | {action:string}
+export type CombatInput = {type: 'combat', enemyId?:number, action:string}
 
 export type EventScene = RandomEventScene | DeterministicEventScene
 
@@ -126,6 +126,6 @@ export type PlayerInput = CombatInput | StoryInput | InventoryInput
 
 export type InventoryAffordance = {itemName: string, prompts: string[] }  
 
-export type InventoryInput = {itemName: string, action: string}
+export type InventoryInput = {type:'inventory', itemName: string, action: string}
 
 export type ReactStateSetter<T> = React.Dispatch<React.SetStateAction<T>>

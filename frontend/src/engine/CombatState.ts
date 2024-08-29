@@ -1,6 +1,5 @@
-
 import { PlayerInput, Frame, Inventory, PlayerStatus, Weapon, InventoryAffordance, Enemy, Affordance, InformationFrame, InputFrame, FrameSequence } from "../types";
-import { GameStateData, StoryRound, CombatRound, PlayerAction, DiceRoll, Turn } from "./types";
+import { GameStateData, CombatRound, PlayerAction, DiceRoll, Turn } from "./types";
 import { GameState } from "./GameState";
 import { match, P } from "ts-pattern";
 
@@ -26,47 +25,82 @@ export default class CombatState implements GameState{
         this._done = done
     }
 
+    /**
+     * Takes input and updates the states, throws if the state returned done `true` in a `currentFrames` call
+     */
     handleInput = async (input: PlayerInput): Promise<void>=>{
-        const {inventory, playerStatus, round} = this._cloneState()
-        match (round.turn).with(
-            'player', ()=>{
-                match(input).with({type:'attack', enemyId:P.select()}, enemyId=>{
-                    const frame = this._attackEnemy(enemyId)
-                    this._round.turn = this._rotateTurn()
-                    return frame
-                }).otherwise(()=>{throw(`can not handle input ${JSON.stringify(input)} on player turn yet`)})
+        const {round} = this._cloneState()
+            if(round.turn !== 'player')
+                throw(`Can not input on enemy turn, round is ${JSON.stringify(round)}, got input from player ${JSON.stringify(input)}`)
+                
+            match(input).with({type:'combat', action:'attack', enemyId:P.select()}, enemyId=>{
+                if (!enemyId) throw("missing enemy missing")
+                let informationFrames = [this._attackEnemy(enemyId)]
+                const combatOver = this.combatOver()
+                this._rotateTurn()
+                while(this._round.turn !== 'player'){
+                    if (combatOver){
+                        this._done=true
+                        switch(combatOver){
+                            case 'won':
+                                this._round.turn = 'win'
+                                return
+                            case 'lost':
+                                this._round.turn = 'game over'
+                                return
+                            default:
+                                combatOver satisfies never
+                        }
 
+                                
+                    }
+                    const turnEnemyId = this._round.turn as number
+                    const enemy = this._getEnemyById(turnEnemyId)
+                    if (!enemy) throw(`I can not find enemy ${turnEnemyId}`)
+                    const frame = this._processEnemyAttack(enemy)
+                    if (frame) informationFrames.push(frame)
+                    this._rotateTurn()
+                    
+                }
+                this._currentFrames = Promise.resolve({informationFrames:informationFrames, inputFrame: this.combatInputFrame()})
             })
-        .with(P.number, enemyId=>{
-            console.debug(`received input on enemy round ${enemyId}, should be inventory action, got input  ${JSON.stringify(input)}`)
-        })
-        .otherwise(()=>{throw("Can not handle combat case yet")})
+            .otherwise(()=>{throw(`can not handle input ${JSON.stringify(input)} on player turn yet`)})
+            
     }
+    /**
+     * Provides the current frames
+     */
     
     currentFrames = async (): Promise<{frameSequence:FrameSequence, done: boolean}>=>{
         return {frameSequence: await this._currentFrames, done: this._done}
     }
 
-    _initialStateFrames = ():{frameSequence: FrameSequence, done: boolean}=>{
+    private combatInputFrame():InputFrame{
         const {inventory, playerStatus, round} = this._cloneState()
-        if (this._round.turn === 'player'){
-            const inputFrame : InputFrame = {
+        return {
                 inventory: {...inventory, affordances: this._getInventoryAffordances()},
                 playerStatus,
                 scene: {type: 'combat scene', enemies: round.enemies, affordances: this._getCombatAffordances() }
             }
+
+
+    }
+
+    _initialStateFrames = ():{frameSequence: FrameSequence, done: boolean}=>{
+        if (this._round.turn === 'player'){
+            const inputFrame : InputFrame = this.combatInputFrame()
             const frameSequence = {informationFrames: [], inputFrame}
             return {frameSequence, done: false}
         }
         else{
-            throw(`I only know how to handle initial states for player initial turn, but got turn: '${round.turn}'`)
+            throw(`I only know how to handle initial states for player initial turn, but got turn: '${this._round}'`)
         }
     }
     _cloneState = ()=>{
         return structuredClone({inventory: this._inventory, playerStatus: this._playerStatus, round: this._round})
     }
     /**
-     * Creates all the frames up to the one that requires an input
+     * Creates the enemy attack frame, and updates the enemy stats
      * @returns {Frame[]}
      */
     private _attackEnemy(enemyId: number):InformationFrame{
@@ -115,7 +149,10 @@ export default class CombatState implements GameState{
         }
     }
 
-    private _processEnemyAttack = (enemy:Enemy):Frame | null=>{
+    /**
+     * Create the information frame for the enemy attack, then updates the player stats.
+     */
+    private _processEnemyAttack = (enemy:Enemy):InformationFrame | null=>{
        const enemyCanAttack = enemy.position === enemy.attackType
        if (!enemyCanAttack) return null
        const diceOutcome = this._diceRoll()
@@ -127,15 +164,25 @@ export default class CombatState implements GameState{
         else {
             outcomeMessage = `Enemy missed his attack`
         } 
-        return {inventory: {...this._inventory, affordances: this._getInventoryAffordances()},
+        return {inventory: {...this._inventory},
                 playerStatus: {...this._playerStatus},
                 scene: {type:"random event", prompt: "Enemy attack", probability: enemy.accuracy, diceOutcome, outcomeMessage}
             }
        
     }
-    _rotateTurn():Turn{
+
+    private combatOver = ():false | 'won' | 'lost'=>{
+       if (this._playerStatus.health === 0)
+            return 'lost'
+       if (this._enemiesAlive().length === 0)
+            return 'won'
+       return false
+       
+    }
+
+    _rotateTurn():void{
         const round = this._round
-        return match(round.turn)
+        this._round.turn = match(round.turn)
         .with('player', ()=>{
             if (round.enemies.filter(e=>e.health>0).length === 0)
                 return 'win'
@@ -155,12 +202,12 @@ export default class CombatState implements GameState{
         return this._round.enemies.filter(e=>e.health>0)
     }
     
-    private async _weaponTypeMatchesEnemyPosition(enemyId: number){
+    private _weaponTypeMatchesEnemyPosition(enemyId: number){
         const enemy = this._getEnemyById(enemyId);
         if (!enemy) throw(`Can not find enemy ${enemyId}`)
         const equipedWeapon = this._getEquipedWeapon();
         return (equipedWeapon.details.type === 'distance' && enemy.position === 'far') ||
-               equipedWeapon.details.type === 'melee' && enemy.position === 'close' 
+               (equipedWeapon.details.type === 'melee' && enemy.position === 'close')
 
     }
     private _getEquipedWeapon():Weapon & {ammo:number | null;}{
