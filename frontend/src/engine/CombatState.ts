@@ -1,5 +1,5 @@
 
-import { PlayerInput, Frame, Inventory, PlayerStatus, Weapon, InventoryAffordance, Enemy, Affordance } from "../types";
+import { PlayerInput, Frame, Inventory, PlayerStatus, Weapon, InventoryAffordance, Enemy, Affordance, InformationFrame, InputFrame, FrameSequence } from "../types";
 import { GameStateData, StoryRound, CombatRound, PlayerAction, DiceRoll, Turn } from "./types";
 import { GameState } from "./GameState";
 import { match, P } from "ts-pattern";
@@ -10,6 +10,9 @@ export default class CombatState implements GameState{
     private _round: CombatRound
     private _roundCount: number
     private _diceRoll: DiceRoll
+    private _currentFrames: Promise<FrameSequence>
+    private _done: boolean
+
     constructor(gameStateData:GameStateData, diceRoll:DiceRoll){
         if (gameStateData.round.type !== 'combat round')
             throw("You are trying to construct a combat state from non combat data")
@@ -18,91 +21,56 @@ export default class CombatState implements GameState{
         this._round = gameStateData.round
         this._roundCount = gameStateData.roundCount
         this._diceRoll = diceRoll
-        
+        const {frameSequence, done} = this._initialStateFrames();
+        this._currentFrames = Promise.resolve(frameSequence);
+        this._done = done
     }
-    handleInput = async (input: PlayerInput): Promise<{ transitionFrames: Frame[]; done: boolean; }>=>{
-        const enemiesAlive = this._enemiesAlive()
-        if (enemiesAlive.length === 0){
-            return{
-                transitionFrames:this._getCurrentStateFrames(),
-                done: true
+
+    handleInput = async (input: PlayerInput): Promise<void>=>{
+        const {inventory, playerStatus, round} = this._cloneState()
+        match (round.turn).with(
+            'player', ()=>{
+                match(input).with({type:'attack', enemyId:P.select()}, enemyId=>{
+                    const frame = this._attackEnemy(enemyId)
+                    this._round.turn = this._rotateTurn()
+                    return frame
+                }).otherwise(()=>{throw(`can not handle input ${JSON.stringify(input)} on player turn yet`)})
+
+            })
+        .with(P.number, enemyId=>{
+            console.debug(`received input on enemy round ${enemyId}, should be inventory action, got input  ${JSON.stringify(input)}`)
+        })
+        .otherwise(()=>{throw("Can not handle combat case yet")})
+    }
+    
+    currentFrames = async (): Promise<{frameSequence:FrameSequence, done: boolean}>=>{
+        return {frameSequence: await this._currentFrames, done: this._done}
+    }
+
+    _initialStateFrames = ():{frameSequence: FrameSequence, done: boolean}=>{
+        const {inventory, playerStatus, round} = this._cloneState()
+        if (this._round.turn === 'player'){
+            const inputFrame : InputFrame = {
+                inventory: {...inventory, affordances: this._getInventoryAffordances()},
+                playerStatus,
+                scene: {type: 'combat scene', enemies: round.enemies, affordances: this._getCombatAffordances() }
             }
+            const frameSequence = {informationFrames: [], inputFrame}
+            return {frameSequence, done: false}
         }
-        return {
-            transitionFrames:[this._attackEnemy(this._round.enemies[0].id), ...this._getCurrentStateFrames()],
-            done:this._playerStatus.health  === 0
+        else{
+            throw(`I only know how to handle initial states for player initial turn, but got turn: '${round.turn}'`)
         }
     }
-    initialFrames = async (): Promise<Frame[]>=>{
-        return this._getCurrentStateFrames()
+    _cloneState = ()=>{
+        return structuredClone({inventory: this._inventory, playerStatus: this._playerStatus, round: this._round})
     }
-
-
     /**
      * Creates all the frames up to the one that requires an input
      * @returns {Frame[]}
      */
-    private _getCurrentStateFrames():Frame[]{
-        console.debug(`calling currentStateFrames ${JSON.stringify(this._round)}`)
-        if (this._round.turn === 'player' &&
-            this._playerStatus.health>0 &&
-            this._enemiesAlive().length > 0){
-                const frame: Frame =  {
-                    inventory: {...this._inventory, affordances: this._getInventoryAffordances()},
-                    playerStatus:{...this._playerStatus},
-                    scene: {
-                        type: 'combat scene',
-                        enemies:this._round.enemies,
-                        affordances: this._getCombatAffordances()
-                    }
-                }
-                return [frame]
-        }
-        else if(this._round.turn === 'player' &&
-                this._playerStatus.health>0 &&
-                this._enemiesAlive().length === 0){
-                const frame: Frame = {
-                    inventory: {...this._inventory, affordances:null},
-                        playerStatus: {...this._playerStatus},
-                        scene: {
-                            type: 'event',
-                            prompt: 'you won',
-
-                        }
-                    }
-            
-            return [frame]
-
-                }
-        else if (this._round.turn === 'player' &&
-                 this._playerStatus.health === 0){
-            const frame: Frame = {
-                inventory: {...this._inventory, affordances:null},
-                    playerStatus: {...this._playerStatus},
-                    scene: {
-                        type: 'event',
-                        prompt: 'you died',
-
-                    }
-                }
-            
-            return [frame]
-        }
-        else {
-            //enemies turn
-            let frames: Frame[] = [];
-            while(this._playerStatus.health > 0 && this._enemiesAlive.length > 0){
-                const newFrames = this._enemiesAlive().map(enemy=>this._processEnemyAttack(enemy)).filter(f=>f!==null)
-                frames = frames.concat(newFrames)
-            }
-            this._round.turn = 'player'
-            const [playerFrame] = this._getCurrentStateFrames()
-            return [...frames, playerFrame]
-        }
-
-    }
-    private _attackEnemy(enemyId: number):Frame{
-        const round = this._round
+    private _attackEnemy(enemyId: number):InformationFrame{
+        const {round, inventory, playerStatus} = this._cloneState()
         let equipedWeapon = undefined
         {
             //sanity checks
@@ -115,8 +83,8 @@ export default class CombatState implements GameState{
         const diceOutcome = this._diceRoll()
         const attackSucceeded = diceOutcome > equipedWeapon.details.difficulty
         if (!attackSucceeded)
-            return {inventory:{...this._inventory, affordances: null},
-                    playerStatus: this._playerStatus,
+            return {inventory,
+                    playerStatus,
                     scene: {
                         type:"random event",
                         prompt:"attacking enemy",
@@ -133,14 +101,10 @@ export default class CombatState implements GameState{
             else return {...e, health: Math.max(0, e.health-damage)}
         })
         const enemiesAlive = newEnemies.filter(e=>e.health > 0)
-        //@ts-ignore
-        let done;
-        if (enemiesAlive.length === 0) done = true
         this._round.enemies = enemiesAlive        
-        this._round.turn = this._rotateTurn()
         return {
-            inventory: {...this._inventory, affordances: null},
-            playerStatus: {...this._playerStatus},
+            inventory,
+            playerStatus,
             scene: {
                 type: "random event",
                 prompt: "attacking enemy",

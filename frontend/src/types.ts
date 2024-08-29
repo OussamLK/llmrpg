@@ -1,3 +1,5 @@
+import { Inventory } from "./Inventory"
+
 export type Enemy = {
     id: number
     description: string,
@@ -56,13 +58,27 @@ export type PlayerStatus = {
 
 export type FrameInventory = Inventory & {affordances: InventoryAffordance[] | null}
 
-export type Frame = {
-    inventory: FrameInventory
+export type Frame = InformationFrame | InputFrame
+
+/**
+ * A valid Frame sequence
+ */
+export type FrameSequence = {informationFrames:InformationFrame[], inputFrame: InputFrame | null}
+
+/**
+ * No input is accepted on an information frame
+ */
+export type InformationFrame = {
+    inventory: Inventory
     playerStatus: PlayerStatus,
-    scene: Scene
+    scene: EventScene
 }
 
-export type Scene = StoryScene | CombatScene | EventScene
+export type InputFrame = {
+    inventory: FrameInventory
+    playerStatus: PlayerStatus,
+    scene: StoryScene | CombatScene
+}
 
 export type StoryScene = {
     type: 'story scene'

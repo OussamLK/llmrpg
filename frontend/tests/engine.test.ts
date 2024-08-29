@@ -17,15 +17,8 @@ function pprintFrame(frame:Frame){
 describe("GameStates work correctly", ()=>{
     it("Combat state works correctly", async ()=>{
         const combatState = new CombatState(mockCombatState, defaultDiceRoll)
-        let done = false
-        let frames :Frame[]= []
-        while(!done){
-            let {transitionFrames, done:done_} = await combatState.handleInput("attack")
-            frames = frames.concat(transitionFrames)
-            const framesDigest = transitionFrames.map(f=>pprintFrame(f)).join("\n")
-            done = done_
-        }
-        const pframes = frames.map(f=>pprintFrame(f)).join("\n")
-        expect(frames).not.toBeNull()
+        combatState.handleInput({action: 'attack', enemyId: 3})
+        const {frameSequence, done} = await combatState.currentFrames()
+        console.log()
     })
 })

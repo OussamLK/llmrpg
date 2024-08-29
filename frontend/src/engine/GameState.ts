@@ -2,11 +2,11 @@ import type {GameStateData} from './types'
 import StoryState from './StoryState'
 import CombatState from './CombatState'
 import {match} from 'ts-pattern'
-import type { PlayerInput, Frame } from '../types'
+import type { PlayerInput, Frame, InformationFrame, InputFrame, FrameSequence } from '../types'
 
 export interface GameState {
-    handleInput: (input: PlayerInput) => Promise<{transitionFrames: Frame[]; done: boolean;}>;
-    initialFrames: ()=>Promise<Frame[]>;
+    handleInput: (input: PlayerInput) => Promise<void>;
+    currentFrames: ()=>Promise<  {frameSequence: FrameSequence, done: boolean}>;
 }
 export function defaultDiceRoll():number{
     return Math.ceil(Math.random() * 100)

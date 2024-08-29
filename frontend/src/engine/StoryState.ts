@@ -1,4 +1,4 @@
-import { PlayerInput, Frame, Inventory, PlayerStatus, InventoryAffordance, Weapon } from "../types";
+import { PlayerInput, Frame, InformationFrame, InputFrame, Inventory, PlayerStatus, InventoryAffordance, Weapon, FrameSequence } from "../types";
 import { DiceRoll, GameStateData, StoryRound } from "./types";
 import { GameState } from "./GameState";
 
@@ -19,16 +19,18 @@ export default class StoryState implements GameState{
         this._diceRoll= diceRoll
         
     }
-    handleInput = async (input: PlayerInput): Promise<{ transitionFrames: Frame[]; done: boolean; }>=>{
+    handleInput = async (input: PlayerInput): Promise<void>=>{
         throw("not implemented")
     }
-    initialFrames = async (): Promise<Frame[]>=>{
-            const frame: Frame = {
+    currentFrames = async (): Promise<{frameSequence: FrameSequence, done: boolean} >=>{
+            const frame: InputFrame = {
                 inventory: {...this._inventory, affordances: await this._getInventoryAffordances()},
                 playerStatus:this._playerStatus,
                 scene: {type: 'story scene', prompt: this._round.gamePrompt}
             }
-            return [frame]
+            const frameSequence = {informationFrames: [], inputFrame: frame}
+            return {frameSequence, done: false}
+
     }
     private async _getInventoryAffordances():Promise<InventoryAffordance[]>{
         const {weapons, medicine, keyItems } = this._inventory;

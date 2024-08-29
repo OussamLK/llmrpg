@@ -1,4 +1,3 @@
-import { ProgressHTMLAttributes } from "react";
 import type { Inventory, PlayerStatus, Enemy, Weapon, Medicine, KeyItem, Ammo } from "../types";
 
 
