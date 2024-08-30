@@ -19,7 +19,7 @@ export default function CombatScene(
                const affordances = getEnemyAffordance(enemy.id)
                 .map(aff=><button
                             key={aff.prompt}
-                            onClick={()=>onInput({enemyId:enemy.id, action:aff.prompt})}
+                            onClick={()=>onInput({type:'combat', enemyId:enemy.id, action:aff.prompt})}
                             style={{margin: ".3em"}}>
                                 {aff.prompt}
                             </button>)
@@ -28,7 +28,7 @@ export default function CombatScene(
                 </li>
             })}
         </ul>
-        {indepedentAffordances.map(aff=>(<button key={aff.prompt} onClick={()=>onInput({action:aff.prompt})} title={aff.description} style={{margin: ".3em"}}>{aff.prompt}</button>))}
+        {indepedentAffordances.map(aff=>(<button key={aff.prompt} onClick={()=>onInput({type:'combat', action:aff.prompt})} title={aff.description} style={{margin: ".3em"}}>{aff.prompt}</button>))}
     </div>)
 }
 

@@ -7,7 +7,7 @@ export type Enemy = {
     position: 'close' | 'far'
     attackDamage: number,
     accuracy: number
-    attackType: 'close' | 'far' 
+    attackType: 'close' | 'far'
 }
 
 export type Weapon = {
@@ -45,7 +45,7 @@ export type KeyItem = {
 }
 
 export type Inventory = {
-    weapons: (Weapon & {ammo: number | null})[]
+    weapons: (Weapon & { ammo: number | null })[]
     keyItems: KeyItem[]
     medicine: Medicine[]
 }
@@ -56,20 +56,20 @@ export type PlayerStatus = {
 }
 
 
-export type FrameInventory = Inventory & {affordances: InventoryAffordance[] | null}
+export type FrameInventory = Inventory & { affordances?: InventoryAffordance[] | null }
 
 export type Frame = InformationFrame | InputFrame
 
 /**
  * A valid Frame sequence
  */
-export type FrameSequence = {informationFrames:InformationFrame[], inputFrame: InputFrame | null}
+export type FrameSequence = { informationFrames: InformationFrame[], inputFrame: InputFrame | null }
 
 /**
  * No input is accepted on an information frame
  */
 export type InformationFrame = {
-    inventory: Inventory
+    inventory: FrameInventory
     playerStatus: PlayerStatus,
     scene: EventScene
 }
@@ -79,6 +79,8 @@ export type InputFrame = {
     playerStatus: PlayerStatus,
     scene: StoryScene | CombatScene
 }
+
+export type Scene = StoryScene | CombatScene | EventScene 
 
 export type StoryScene = {
     type: 'story scene'
@@ -90,9 +92,10 @@ export type StoryInput = string
 export type CombatScene = {
     type: "combat scene",
     enemies: Enemy[],
-    affordances: Affordance[]}
+    affordances: Affordance[]
+}
 
-export type CombatInput = {type: 'combat', enemyId?:number, action:string}
+export type CombatInput = { type: 'combat', enemyId?: number, action: string }
 
 export type EventScene = RandomEventScene | DeterministicEventScene
 
@@ -119,13 +122,13 @@ export type Affordance = {
     type: 'independent',
     prompt: string,
     description: string
-} 
+}
 
 
 export type PlayerInput = CombatInput | StoryInput | InventoryInput
 
-export type InventoryAffordance = {itemName: string, prompts: string[] }  
+export type InventoryAffordance = { itemName: string, prompts: string[] }
 
-export type InventoryInput = {type:'inventory', itemName: string, action: string}
+export type InventoryInput = { type: 'inventory', itemName: string, action: string }
 
 export type ReactStateSetter<T> = React.Dispatch<React.SetStateAction<T>>

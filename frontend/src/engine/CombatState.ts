@@ -34,7 +34,7 @@ export default class CombatState implements GameState{
                 throw(`Can not input on enemy turn, round is ${JSON.stringify(round)}, got input from player ${JSON.stringify(input)}`)
                 
             match(input).with({type:'combat', action:'attack', enemyId:P.select()}, enemyId=>{
-                if (!enemyId) throw("missing enemy missing")
+                if (!enemyId) throw("enemy id missing")
                 let informationFrames = [this._attackEnemy(enemyId)]
                 const combatOver = this.combatOver()
                 this._rotateTurn()
@@ -64,6 +64,20 @@ export default class CombatState implements GameState{
                 }
                 this._currentFrames = Promise.resolve({informationFrames:informationFrames, inputFrame: this.combatInputFrame()})
             })
+            .with({type:"combat", action:'move to', enemyId:P.select()},enemyId=>{
+                if (!enemyId) throw("enemy id missing")
+                this.moveToEnemy(enemyId)
+                this._currentFrames = Promise.resolve({informationFrames: [], inputFrame: this.combatInputFrame()})
+
+            })
+            .with({type:'inventory', action:'equip', itemName:P.select()}, itemName=>{
+                this.equipWeapon(itemName)
+                this._currentFrames = Promise.resolve({informationFrames:[], inputFrame: this.combatInputFrame()})
+            })
+            .with({type:'combat', action: 'retreat'}, ()=>{
+                this.retreat()
+                this._currentFrames = Promise.resolve({informationFrames: [], inputFrame: this.combatInputFrame()})
+            })
             .otherwise(()=>{throw(`can not handle input ${JSON.stringify(input)} on player turn yet`)})
             
     }
@@ -86,7 +100,7 @@ export default class CombatState implements GameState{
 
     }
 
-    _initialStateFrames = ():{frameSequence: FrameSequence, done: boolean}=>{
+    private _initialStateFrames = ():{frameSequence: FrameSequence, done: boolean}=>{
         if (this._round.turn === 'player'){
             const inputFrame : InputFrame = this.combatInputFrame()
             const frameSequence = {informationFrames: [], inputFrame}
@@ -96,7 +110,7 @@ export default class CombatState implements GameState{
             throw(`I only know how to handle initial states for player initial turn, but got turn: '${this._round}'`)
         }
     }
-    _cloneState = ()=>{
+    private _cloneState = ()=>{
         return structuredClone({inventory: this._inventory, playerStatus: this._playerStatus, round: this._round})
     }
     /**
@@ -115,7 +129,7 @@ export default class CombatState implements GameState{
             if (!equipedWeapon) throw new Error("can not find equiped weapon")
         }
         const diceOutcome = this._diceRoll()
-        const attackSucceeded = diceOutcome > equipedWeapon.details.difficulty
+        const attackSucceeded = diceOutcome < 100-equipedWeapon.details.difficulty
         if (!attackSucceeded)
             return {inventory,
                     playerStatus,
@@ -171,6 +185,19 @@ export default class CombatState implements GameState{
        
     }
 
+    private moveToEnemy(enemyId:number){
+        let enemies = this._round.enemies 
+        const enemy = enemies.find(enemy=>enemy.id === enemyId)
+        if (!enemy)
+            throw(`trying to move towards an enemy that I can not find, id ${enemyId}`)
+        if (enemy.position === 'close')
+            throw(`Can not move to enemy that is already close ${enemyId}`)
+        enemy.position = 'close'
+        enemies.filter(e=>e.id !== enemyId).forEach(e=>e.position = 'far')
+        
+        
+    }
+
     private combatOver = ():false | 'won' | 'lost'=>{
        if (this._playerStatus.health === 0)
             return 'lost'
@@ -180,7 +207,7 @@ export default class CombatState implements GameState{
        
     }
 
-    _rotateTurn():void{
+    private _rotateTurn():void{
         const round = this._round
         this._round.turn = match(round.turn)
         .with('player', ()=>{
@@ -202,6 +229,13 @@ export default class CombatState implements GameState{
         return this._round.enemies.filter(e=>e.health>0)
     }
     
+    private equipWeapon(weaponName:string){
+        const weaponExists = this._inventory.weapons.find(w=>w.name === weaponName) !== undefined
+        if (!weaponExists)
+            throw(`I can not find wapon ${weaponName}, I have '${this._inventory.weapons.map(w=>w.name).join(", ")}', in my inventory`)
+        this._playerStatus.equipedWeapon = weaponName
+    }
+
     private _weaponTypeMatchesEnemyPosition(enemyId: number){
         const enemy = this._getEnemyById(enemyId);
         if (!enemy) throw(`Can not find enemy ${enemyId}`)
@@ -244,6 +278,30 @@ export default class CombatState implements GameState{
         const medicieAffordances: InventoryAffordance[] = medicine.map(m=>({itemName:m.name, prompts:['use', 'discard']})) 
         const keyItemsAffordances: InventoryAffordance[] = keyItems.map(m=>({itemName:m.name, prompts:[]}))
         return [...weaponAffordances, ...medicieAffordances, ...keyItemsAffordances]
+    }
+
+    private retreat(){
+        this._round.enemies.forEach(e=>e.position = 'far')
+    }
+
+    private escape():InformationFrame{
+        const {inventory, playerStatus} = this._cloneState()
+        const roll = this._diceRoll()
+        const successful = roll < 50;
+        if (successful){
+            return {
+                inventory: inventory,
+                playerStatus: playerStatus,
+                scene: {'diceOutcome': roll, probability: 50, prompt: "escaping", type:'random event', outcomeMessage: 'You managed to escape'}
+            }
+        }
+        else
+            return {
+                inventory: inventory,
+                playerStatus: playerStatus,
+                scene: {'diceOutcome': roll, probability: 50, prompt: "escaping", type:'random event', outcomeMessage: 'You failed to escape'}
+            }
+
     }
 
     private _getCombatAffordances(){

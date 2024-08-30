@@ -20,7 +20,7 @@ export default class StoryState implements GameState{
         
     }
     handleInput = async (input: PlayerInput): Promise<void>=>{
-        throw("not implemented")
+        throw("handle input in story state not yet implemented")
     }
     currentFrames = async (): Promise<{frameSequence: FrameSequence, done: boolean} >=>{
             const frame: InputFrame = {
