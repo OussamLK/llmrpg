@@ -8,12 +8,18 @@ export const storyRound:StoryRound = {
 export const combatRound: CombatRound = {
   type:"combat round",
   enemies: [
-    {id: 1, description:"clicker", health: 100, position:"close", attackType:"close", accuracy: 70, attackDamage: 30},
-    {id: 2, description:"runner", health: 75, position:"close", attackType:"close", accuracy: 70, attackDamage: 10},
-    {id: 3, description:"runner", health: 60, position:"far", attackType:"close", accuracy: 70, attackDamage: 10},
+    {id: 1, description:"clicker", health: 10, position:"close", attackType:"close", accuracy: 70, attackDamage: 30},
+    //{id: 2, description:"runner", health: 7, position:"close", attackType:"close", accuracy: 70, attackDamage: 10},
+    //{id: 3, description:"runner", health: 6, position:"far", attackType:"close", accuracy: 70, attackDamage: 10},
     
   ],
-  turn: 'player'
+  turn: 'player',
+  loot: [
+    {type:'weapon', damage:30, name:'sting', details:{type:'melee', difficulty: 30, durability:20}},
+    {type:'ammo', weaponName: 'pistol', quantity: 10, name: 'bullets'},
+    {type: 'key item', name: 'personal journal', description: "the player's personal journal"}
+  
+  ]
 }
 
 export const mockInventory:Inventory ={ 

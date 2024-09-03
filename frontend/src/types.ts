@@ -10,6 +10,9 @@ export type Enemy = {
     attackType: 'close' | 'far'
 }
 
+/**
+ * Melee weapons do not require ammo, while distanceWeapons do.
+ */
 export type Weapon = {
     type: "weapon",
     name: string,
@@ -35,6 +38,8 @@ export type Medicine = {
 
 export type Ammo = {
     type: "ammo",
+    name: string,
+    weaponName: string,
     quantity: number
 }
 

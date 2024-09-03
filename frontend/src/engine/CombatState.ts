@@ -1,5 +1,5 @@
 import { PlayerInput, Frame, Inventory, PlayerStatus, Weapon, InventoryAffordance, Enemy, Affordance, InformationFrame, InputFrame, FrameSequence } from "../types";
-import { GameStateData, CombatRound, PlayerAction, DiceRoll, Turn } from "./types";
+import { GameStateData, CombatRound, PlayerAction, DiceRoll, Turn, Loot } from "./types";
 import { GameState } from "./GameState";
 import { match, P } from "ts-pattern";
 
@@ -29,7 +29,7 @@ export default class CombatState implements GameState{
      * Takes input and updates the states, throws if the state returned done `true` in a `currentFrames` call
      */
     handleInput = async (input: PlayerInput): Promise<void>=>{
-        const {round} = this._cloneState()
+        const {round, inventory, playerStatus} = this._cloneState()
             if(round.turn !== 'player')
                 throw(`Can not input on enemy turn, round is ${JSON.stringify(round)}, got input from player ${JSON.stringify(input)}`)
                 
@@ -41,9 +41,26 @@ export default class CombatState implements GameState{
                 while(this._round.turn !== 'player'){
                     if (combatOver){
                         this._done=true
+                        let lootPrompt;
                         switch(combatOver){
                             case 'won':
-                                this._round.turn = 'win'
+                                this._round.turn = 'win';
+                                if (round.loot){
+                                    this.addLootItems(round.loot)
+                                    const lootStrings = round.loot.map(l=>l.name).join(", ")
+                                    lootPrompt = `You just looted : ${lootStrings}.`
+
+                                }
+                                const lootFrame :InformationFrame = {
+                                                inventory:structuredClone(this._inventory),
+                                                playerStatus,
+                                                scene:{
+                                                    type:"event",
+                                                    prompt: lootPrompt? `You won the battle, \n ${lootPrompt}`: "You won the battle."
+                                                }
+                                            }
+                                informationFrames.push(lootFrame)
+                                this._currentFrames = Promise.resolve({informationFrames, inputFrame: null})
                                 return
                             case 'lost':
                                 this._round.turn = 'game over'
@@ -252,6 +269,39 @@ export default class CombatState implements GameState{
         }
         return weapon
     }
+
+
+    private addLootItems(loot:Loot[]){
+        const copy = structuredClone(loot)
+        copy.sort((a,b)=>a.type === 'weapon' && b.type !== 'weapon' ? -1 : 1 )
+        copy.forEach(item=>this.addLootItem(item))
+    }
+    /**
+     * Always call weapons first when adding so that ammo can be added later
+     */
+    private addLootItem(loot:Loot){
+       match(loot)
+       .with({type:'key item'}, loot=>{
+            this._inventory.keyItems.push(loot)
+       }) 
+       .with({type:'medicine'}, loot=>this._inventory.medicine.push(loot))
+       .with({type:'ammo', quantity:P.select('quantity'), weaponName:P.select('weaponName')},
+            ({quantity, weaponName})=>{
+                const weaponEntry = this._inventory.weapons.find(w=>w.name === weaponName)
+                if (!weaponEntry)
+                    throw(`picking ammo of a wapon you do not have, weapon name is ${weaponName}`)
+                if (!weaponEntry.ammo)
+                    throw(`picking ammo of a weapon that does not require ammo ${weaponName}`)
+                weaponEntry.ammo += quantity;
+       })
+       .with({type: 'weapon', details: {type: 'distance'}}, weapon=>{
+            this._inventory.weapons.push({...weapon, ammo: 0})
+       })
+       .with({type: 'weapon', details: {type: 'melee'}}, weapon=>{
+            this._inventory.weapons.push({...weapon, ammo: null})
+       }).exhaustive()
+    }
+
     private _getEnemyById(enemyId:number):Enemy| null{
         const round = this._round
         if (round.type !== "combat round") {
