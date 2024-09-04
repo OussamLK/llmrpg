@@ -26,7 +26,8 @@ function failureDiceRoll(){
 
 async function displayCombatStateFrames(label:string, combatState:CombatState){
     console.group(label)
-    const {frameSequence:{informationFrames, inputFrame}, done} = await combatState.currentFrames()
+    const {informationFrames, inputFrame} = await combatState.currentFrames()
+    const done = this.done()
     console.table(informationFrames.map(f=>({...(f.scene), ...f.playerStatus})))
     let combatScene = inputFrame?.scene as CombatScene
     console.table(combatScene.enemies)
@@ -41,7 +42,7 @@ describe("GameStates work correctly", ()=>{
         await displayCombatStateFrames("starting state", combatStateSuccess)
         combatStateSuccess.handleInput({type:'inventory', action:'equip', itemName:'machete'})
         combatStateSuccess.handleInput({type: "combat", action:"attack", enemyId:1})
-        let {frameSequence, done} = await combatStateSuccess.currentFrames()
+        let frameSequence = await combatStateSuccess.currentFrames()
         expect(frameSequence.informationFrames.length).toBe(3)
         expect(frameSequence.inputFrame).not.toBeNull()
         await displayCombatStateFrames("after attacking enemy 1", combatStateSuccess)

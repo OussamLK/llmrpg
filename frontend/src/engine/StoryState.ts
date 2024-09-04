@@ -8,6 +8,7 @@ export default class StoryState implements GameState{
     private _round: StoryRound
     private _roundCount: number
     private _diceRoll: DiceRoll
+    private _done: boolean
 
     constructor(gameStateData:GameStateData, diceRoll:DiceRoll){
         if (gameStateData.round.type !== 'story round')
@@ -17,21 +18,29 @@ export default class StoryState implements GameState{
         this._round = gameStateData.round
         this._roundCount = gameStateData.roundCount
         this._diceRoll= diceRoll
+        this._done = false
         
     }
+
     handleInput = async (input: PlayerInput): Promise<void>=>{
         throw("handle input in story state not yet implemented")
     }
-    currentFrames = async (): Promise<{frameSequence: FrameSequence, done: boolean} >=>{
-            const frame: InputFrame = {
-                inventory: {...this._inventory, affordances: await this._getInventoryAffordances()},
-                playerStatus:this._playerStatus,
-                scene: {type: 'story scene', prompt: this._round.gamePrompt}
-            }
-            const frameSequence = {informationFrames: [], inputFrame: frame}
-            return {frameSequence, done: false}
+
+    currentFrames = async (): Promise<FrameSequence>=>{
+        const frame: InputFrame = {
+            inventory: {...this._inventory, affordances: await this._getInventoryAffordances()},
+            playerStatus:this._playerStatus,
+            scene: {type: 'story scene', prompt: this._round.gamePrompt}
+        }
+        const frameSequence = {informationFrames: [], inputFrame: frame}
+        return frameSequence
 
     }
+
+    done = ():boolean=>{
+        return this._done
+    }
+
     private async _getInventoryAffordances():Promise<InventoryAffordance[]>{
         const {weapons, medicine, keyItems } = this._inventory;
         function usableWeapon(weapon: Weapon & {ammo: number | null}){ return weapon.ammo === null || weapon.ammo !== 0}

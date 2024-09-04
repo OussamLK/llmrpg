@@ -102,8 +102,8 @@ export default class CombatState implements GameState{
      * Provides the current frames
      */
     
-    currentFrames = async (): Promise<{frameSequence:FrameSequence, done: boolean}>=>{
-        return {frameSequence: await this._currentFrames, done: this._done}
+    currentFrames = async (): Promise<FrameSequence>=>{
+        return await this._currentFrames
     }
 
     private combatInputFrame():InputFrame{
@@ -115,6 +115,10 @@ export default class CombatState implements GameState{
             }
 
 
+    }
+
+    done():boolean{
+        return this._done
     }
 
     private _initialStateFrames = ():{frameSequence: FrameSequence, done: boolean}=>{

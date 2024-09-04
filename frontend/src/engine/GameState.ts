@@ -6,7 +6,8 @@ import type { PlayerInput, Frame, InformationFrame, InputFrame, FrameSequence } 
 
 export interface GameState {
     handleInput: (input: PlayerInput) => Promise<void>;
-    currentFrames: ()=>Promise<  {frameSequence: FrameSequence, done: boolean}>;
+    currentFrames: ()=>Promise<FrameSequence>;
+    done: ()=>boolean
 }
 export function defaultDiceRoll():number{
     return Math.ceil(Math.random() * 100)
