@@ -3,17 +3,23 @@ import type {
     InputFrame,
     InformationFrame,
     PlayerInput,
-    FrameSequence
+    FrameSequence,
+    PlayerStatus,
+    Inventory
 } from "../types";
 import { GameState, createGameState } from "./GameState";
 
 export default class Engine{
     private _llmConnector: LLMConnector
     private _gameState!: Promise<GameState>
+    private playerStatus: PlayerStatus
+    private inventory: Inventory
     private currentFrames: Promise<FrameSequence>
     
-    constructor(llmConnector: LLMConnector){
+    constructor(llmConnector: LLMConnector, initialInventory:Inventory, equipedWeapon: string){
         this._llmConnector = llmConnector
+        this.playerStatus = {health: 100, equipedWeapon}
+        this.inventory = initialInventory
         this._setNewState()
         this.currentFrames = this._gameState.then(state=>state.currentFrames())
     }
@@ -46,7 +52,7 @@ export default class Engine{
     private _setNewState = async ()=>{
         const newStoryDevelopment = this._llmConnector.requestStoryDevelopment()
         newStoryDevelopment.then(sd=>console.debug("new story development is: ", sd))
-        this._gameState = createGameState(newStoryDevelopment, this._llmConnector)
+        this._gameState = createGameState(newStoryDevelopment, this._llmConnector, this.playerStatus, this.inventory)
 
     }
 }

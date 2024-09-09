@@ -12,11 +12,11 @@ export default class StoryState implements GameState{
     private _done: boolean
     private llmConnector: LLMConnector
 
-    constructor(gameStateData:GameStateData, diceRoll:DiceRoll, llmConnector:LLMConnector){
+    constructor(gameStateData:GameStateData, diceRoll:DiceRoll, llmConnector:LLMConnector, playerStatus: PlayerStatus, inventory:Inventory){
         if (gameStateData.round.type !== 'story round')
             throw("You are trying to construct a story state from non story data")
-        this._inventory = gameStateData.inventory
-        this._playerStatus = gameStateData.playerStatus
+        this._inventory = inventory
+        this._playerStatus = playerStatus
         this._round = gameStateData.round
         this._roundCount = gameStateData.roundCount
         this._diceRoll= diceRoll

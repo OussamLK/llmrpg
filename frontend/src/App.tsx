@@ -5,9 +5,10 @@ import type { PlayerInput, FrameSequence } from './types'
 import { Inventory } from './Inventory'
 import Scene from './Scenes/Scene'
 import { MockLLMConnector } from './LLMConnector'
+import { mockCombatState } from './mocks/gameStates'
 
 const mockLLMConnector = new MockLLMConnector()
-const engine = new Engine(mockLLMConnector)
+const engine = new Engine(mockLLMConnector, mockCombatState.inventory, 'pistol')
 export function App() {
   const [frames, setFrames] = useState<FrameSequence | undefined>()
 

@@ -27,10 +27,10 @@ export class MockLLMConnector implements LLMConnector {
     gameStates: GameStateData[]
     constructor() {
         this.events = []
-        this.gameStates = [mockCombatState, mockStoryState, lootState, mockCombatState].map(s=>structuredClone(s))
+        this.gameStates = [lootState, mockCombatState, mockStoryState, lootState, mockCombatState].map(s=>structuredClone(s))
     }
     async requestStoryDevelopment(): Promise<StoryDevelopment> {
-        const state = (async () => this.gameStates.pop())()
+        const state = Promise.resolve(this.gameStates.pop())
         //@ts-ignore
         return state
     }

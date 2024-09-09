@@ -37,8 +37,8 @@ async function displayCombatStateFrames(label:string, combatState:CombatState){
 
 describe("GameStates work correctly", ()=>{
     it("Combat state works correctly", async ()=>{
-        const combatStateSuccess = new CombatState(mockCombatState, successDiceRoll, mockLLMConnector)
-        const combatStateFailure = new CombatState(mockCombatState, failureDiceRoll, mockLLMConnector)
+        const combatStateSuccess = new CombatState(mockCombatState, successDiceRoll, mockLLMConnector, mockCombatState.playerStatus, mockCombatState.inventory)
+        const combatStateFailure = new CombatState(mockCombatState, failureDiceRoll, mockLLMConnector, mockCombatState.playerStatus, mockCombatState.inventory)
         await displayCombatStateFrames("starting state", combatStateSuccess)
         combatStateSuccess.handleInput({type:'inventory', action:'equip', itemName:'machete'})
         combatStateSuccess.handleInput({type: "combat", action:"attack", enemyId:1})
@@ -59,7 +59,7 @@ describe("GameStates work correctly", ()=>{
 
 describe("Engine work correctly", ()=>{
     it("Engine works in Combat state", async ()=>{
-        const successEngine = new Engine(mockLLMConnector)
+        const successEngine = new Engine(mockLLMConnector, mockCombatState.inventory, 'pistol')
         let frames = await successEngine.getFrames()
         successEngine.handleInput({type:'inventory', action:'equip', itemName:'machete'})
         frames = await successEngine.getFrames()
