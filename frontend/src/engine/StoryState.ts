@@ -1,6 +1,7 @@
 import { PlayerInput, Frame, InformationFrame, InputFrame, Inventory, PlayerStatus, InventoryAffordance, Weapon, FrameSequence } from "../types";
 import { DiceRoll, GameStateData, StoryRound } from "./types";
 import { GameState } from "./GameState";
+import LLMConnector from "../LLMConnector";
 
 export default class StoryState implements GameState{
     private _inventory:Inventory
@@ -9,8 +10,9 @@ export default class StoryState implements GameState{
     private _roundCount: number
     private _diceRoll: DiceRoll
     private _done: boolean
+    private llmConnector: LLMConnector
 
-    constructor(gameStateData:GameStateData, diceRoll:DiceRoll){
+    constructor(gameStateData:GameStateData, diceRoll:DiceRoll, llmConnector:LLMConnector){
         if (gameStateData.round.type !== 'story round')
             throw("You are trying to construct a story state from non story data")
         this._inventory = gameStateData.inventory
@@ -19,11 +21,15 @@ export default class StoryState implements GameState{
         this._roundCount = gameStateData.roundCount
         this._diceRoll= diceRoll
         this._done = false
+        this.llmConnector = llmConnector
         
     }
 
     handleInput = async (input: PlayerInput): Promise<void>=>{
-        throw("handle input in story state not yet implemented")
+        if (typeof input !== 'string')
+            throw('story input has to be a string')
+        this.llmConnector.reportPlayerInput(input)
+        this._done = true
     }
 
     currentFrames = async (): Promise<FrameSequence>=>{

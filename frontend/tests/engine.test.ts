@@ -37,8 +37,8 @@ async function displayCombatStateFrames(label:string, combatState:CombatState){
 
 describe("GameStates work correctly", ()=>{
     it("Combat state works correctly", async ()=>{
-        const combatStateSuccess = new CombatState(mockCombatState, successDiceRoll)
-        const combatStateFailure = new CombatState(mockCombatState, failureDiceRoll)
+        const combatStateSuccess = new CombatState(mockCombatState, successDiceRoll, mockLLMConnector)
+        const combatStateFailure = new CombatState(mockCombatState, failureDiceRoll, mockLLMConnector)
         await displayCombatStateFrames("starting state", combatStateSuccess)
         combatStateSuccess.handleInput({type:'inventory', action:'equip', itemName:'machete'})
         combatStateSuccess.handleInput({type: "combat", action:"attack", enemyId:1})

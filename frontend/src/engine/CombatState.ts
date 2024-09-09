@@ -2,6 +2,7 @@ import { PlayerInput, Frame, Inventory, PlayerStatus, Weapon, InventoryAffordanc
 import { GameStateData, CombatRound, PlayerAction, DiceRoll, Turn, Loot } from "./types";
 import { GameState } from "./GameState";
 import { match, P } from "ts-pattern";
+import LLMConnector from "../LLMConnector";
 
 export default class CombatState implements GameState{
     private _inventory:Inventory
@@ -11,8 +12,9 @@ export default class CombatState implements GameState{
     private _diceRoll: DiceRoll
     private _currentFrames: Promise<FrameSequence>
     private _done: boolean
+    private llmConnector: LLMConnector
 
-    constructor(gameStateData:GameStateData, diceRoll:DiceRoll){
+    constructor(gameStateData:GameStateData, diceRoll:DiceRoll, llmConnector:LLMConnector){
         if (gameStateData.round.type !== 'combat round')
             throw("You are trying to construct a combat state from non combat data")
         this._inventory = gameStateData.inventory
@@ -23,6 +25,7 @@ export default class CombatState implements GameState{
         const {frameSequence, done} = this._initialStateFrames();
         this._currentFrames = Promise.resolve(frameSequence);
         this._done = done
+        this.llmConnector = llmConnector
     }
 
     /**
@@ -128,7 +131,7 @@ export default class CombatState implements GameState{
             return {frameSequence, done: false}
         }
         else{
-            throw(`I only know how to handle initial states for player initial turn, but got turn: '${this._round}'`)
+            throw(`I only know how to handle initial states for player initial turn, but got turn: '${this._round.turn}'`)
         }
     }
     private _cloneState = ()=>{

@@ -46,7 +46,7 @@ export default class Engine{
     private _setNewState = async ()=>{
         const newStoryDevelopment = this._llmConnector.requestStoryDevelopment()
         newStoryDevelopment.then(sd=>console.debug("new story development is: ", sd))
-        this._gameState = createGameState(newStoryDevelopment)
+        this._gameState = createGameState(newStoryDevelopment, this._llmConnector)
 
     }
 }

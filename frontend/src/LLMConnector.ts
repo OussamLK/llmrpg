@@ -18,6 +18,7 @@ export default interface LLMConnector {
     requestStoryDevelopment: () => Promise<StoryDevelopment>
     reportEvent: (eventDescription: string) => void
     //getEnemyAction:(gameState)=>{EnemyAction:EnemyAction, prompt:string}
+    reportPlayerInput: (input:string) =>void
 }
 
 export class MockLLMConnector implements LLMConnector {
@@ -26,13 +27,21 @@ export class MockLLMConnector implements LLMConnector {
     gameStates: GameStateData[]
     constructor() {
         this.events = []
-        this.gameStates = [mockCombatState, mockStoryState, lootState, mockCombatState]
+        this.gameStates = [mockCombatState, mockStoryState, lootState, mockCombatState].map(s=>structuredClone(s))
     }
     async requestStoryDevelopment(): Promise<StoryDevelopment> {
         const state = (async () => this.gameStates.pop())()
         //@ts-ignore
         return state
     }
-    reportEvent(eventDescription: string) { this.events.push(eventDescription) }
+    reportEvent(eventDescription: string) {
+        this.events.push(eventDescription)
+        console.debug(`llmConnector: add event ${eventDescription}`)
+    }
+    reportPlayerInput = (input: string)=>{
+        const playerInputEvent = `The player said: ${input}`
+        this.events.push(playerInputEvent)
+        console.debug(`llmConnector: add event ${playerInputEvent}`)
+    };
 
 }
