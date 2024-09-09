@@ -1,5 +1,5 @@
 import { PlayerInput, Frame, Inventory, PlayerStatus, Weapon, InventoryAffordance, Enemy, Affordance, InformationFrame, InputFrame, FrameSequence } from "../types";
-import { GameStateData, CombatRound, PlayerAction, DiceRoll, Turn, Loot } from "./types";
+import { GameStateData, CombatRound, PlayerAction, DiceRoll, Turn, Loot, Round } from "./types";
 import { GameState } from "./GameState";
 import { match, P } from "ts-pattern";
 import LLMConnector from "../LLMConnector";
@@ -8,19 +8,17 @@ export default class CombatState implements GameState{
     private _inventory:Inventory
     private _playerStatus:PlayerStatus
     private _round: CombatRound
-    private _roundCount: number
     private _diceRoll: DiceRoll
     private _currentFrames: Promise<FrameSequence>
     private _done: boolean
     private llmConnector: LLMConnector
 
-    constructor(gameStateData:GameStateData, diceRoll:DiceRoll, llmConnector:LLMConnector, playerStatus:PlayerStatus, inventory: Inventory){
-        if (gameStateData.round.type !== 'combat round')
+    constructor(round:Round, diceRoll:DiceRoll, llmConnector:LLMConnector, playerStatus:PlayerStatus, inventory: Inventory){
+        if (round.type !== 'combat round')
             throw("You are trying to construct a combat state from non combat data")
         this._inventory = inventory
         this._playerStatus = playerStatus
-        this._round = gameStateData.round
-        this._roundCount = gameStateData.roundCount
+        this._round = round
         this._diceRoll = diceRoll
         const {frameSequence, done} = this._initialStateFrames();
         this._currentFrames = Promise.resolve(frameSequence);

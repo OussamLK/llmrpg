@@ -23,7 +23,7 @@ export async function createGameState(
             :Promise<GameState>{
     let gameStateData = await gameStateDataPromise
     return match(gameStateData.round.type)
-    .with('combat round', ()=>new CombatState(gameStateData, defaultDiceRoll, llmConnector, playerStatus, inventory))
-    .with('story round', ()=>new StoryState(gameStateData, defaultDiceRoll, llmConnector, playerStatus, inventory))
+    .with('combat round', ()=>new CombatState(gameStateData.round, defaultDiceRoll, llmConnector, playerStatus, inventory))
+    .with('story round', ()=>new StoryState(gameStateData.round, defaultDiceRoll, llmConnector, playerStatus, inventory))
     .exhaustive()
 }
