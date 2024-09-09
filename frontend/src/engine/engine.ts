@@ -16,10 +16,11 @@ export default class Engine{
     private inventory: Inventory
     private currentFrames: Promise<FrameSequence>
     
-    constructor(llmConnector: LLMConnector, initialInventory:Inventory, equipedWeapon: string){
+    constructor(llmConnector: LLMConnector){
         this._llmConnector = llmConnector
-        this.playerStatus = {health: 100, equipedWeapon}
-        this.inventory = initialInventory
+        const {inventory, playerStatus} = this._llmConnector.initialState()
+        this.playerStatus = playerStatus
+        this.inventory = inventory
         this._setNewState()
         this.currentFrames = this._gameState.then(state=>state.currentFrames())
     }

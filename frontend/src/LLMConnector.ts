@@ -2,6 +2,7 @@
 import { GameStateData, StoryRound, Loot } from "./engine/types"
 export type StoryDevelopment = GameStateData
 import { mockCombatState, mockStoryState } from './mocks/gameStates'
+import { Inventory, PlayerStatus } from "./types"
 
 const gamePad: Loot = { type: "key item", name: "game pad", description: "A playstation game pad" }
 const storyRound: StoryRound = mockStoryState.round as StoryRound
@@ -19,6 +20,7 @@ export default interface LLMConnector {
     reportEvent: (eventDescription: string) => void
     //getEnemyAction:(gameState)=>{EnemyAction:EnemyAction, prompt:string}
     reportPlayerInput: (input:string) =>void
+    initialState: ()=>{inventory:Inventory, playerStatus: PlayerStatus}
 }
 
 export class MockLLMConnector implements LLMConnector {
@@ -43,5 +45,8 @@ export class MockLLMConnector implements LLMConnector {
         this.events.push(playerInputEvent)
         console.debug(`llmConnector: add event ${playerInputEvent}`)
     };
+    initialState = () => {
+        return {inventory: this.gameStates[0].inventory, playerStatus: {health:100, equipedWeapon: 'pistol'}}
+    }
 
 }

@@ -8,7 +8,7 @@ import { MockLLMConnector } from './LLMConnector'
 import { mockCombatState } from './mocks/gameStates'
 
 const mockLLMConnector = new MockLLMConnector()
-const engine = new Engine(mockLLMConnector, mockCombatState.inventory, 'pistol')
+const engine = new Engine(mockLLMConnector)
 export function App() {
   const [frames, setFrames] = useState<FrameSequence | undefined>()
 

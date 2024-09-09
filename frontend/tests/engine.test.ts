@@ -59,7 +59,7 @@ describe("GameStates work correctly", ()=>{
 
 describe("Engine work correctly", ()=>{
     it("Engine works in Combat state", async ()=>{
-        const successEngine = new Engine(mockLLMConnector, mockCombatState.inventory, 'pistol')
+        const successEngine = new Engine(mockLLMConnector)
         let frames = await successEngine.getFrames()
         successEngine.handleInput({type:'inventory', action:'equip', itemName:'machete'})
         frames = await successEngine.getFrames()
