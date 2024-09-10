@@ -10,15 +10,17 @@ class Weapon(BaseModel):
 	type: Literal['weapon']
 	name: str
 	damage: int
-	details: Melee | Distance
+	details: Melee | DistanceWeapon
 
 class Melee(BaseModel):
 	type: Literal['melee']
 	durability: int
+	difficulty: int = Field(le=100)
 
-class Distance(BaseModel):
+class DistanceWeapon(BaseModel):
 	type: Literal['distance']
 	ammoName: str
+	difficulty: int = Field(le=100)
 
 class Medicine(BaseModel):
 	type: Literal['medicine']
@@ -32,16 +34,22 @@ class KeyItem(BaseModel):
 
 class Ammo(BaseModel):
 	type: Literal['ammo']
+	name: str
+	weaponName: str
 	quantity: int
 
 class CombatRound(BaseModel):
 	type: Literal['combat round'] 
 	enemies: list[Enemy]
+	loot: Optional[list[Loot]]
+	turn: Literal['player']
 
 class Enemy(BaseModel):
 	description: str = Field(max_length=30)
 	health: int
 	position: Literal['close', 'far']
+	attackDamage: int
+	accuracy: int = Field(le=100)
 	attackType: Literal['close', 'far']
 
 class StoryRound(BaseModel):
