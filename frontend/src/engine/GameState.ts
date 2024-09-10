@@ -1,4 +1,4 @@
-import type {GameStateData} from './types'
+import type {GameStateData, Round} from './types'
 import StoryState from './StoryState'
 import CombatState from './CombatState'
 import {match} from 'ts-pattern'
@@ -15,15 +15,14 @@ export function defaultDiceRoll():number{
 }
 
 export async function createGameState(
-        gameStateDataPromise:Promise<GameStateData>,
+        round:Round,
         llmConnector:LLMConnector,
         playerStatus: PlayerStatus,
         inventory: Inventory,
     )
             :Promise<GameState>{
-    let gameStateData = await gameStateDataPromise
-    return match(gameStateData.round.type)
-    .with('combat round', ()=>new CombatState(gameStateData.round, defaultDiceRoll, llmConnector, playerStatus, inventory))
-    .with('story round', ()=>new StoryState(gameStateData.round, defaultDiceRoll, llmConnector, playerStatus, inventory))
+    return match(round.type)
+    .with('combat round', ()=>new CombatState(round, defaultDiceRoll, llmConnector, playerStatus, inventory))
+    .with('story round', ()=>new StoryState(round, defaultDiceRoll, llmConnector, playerStatus, inventory))
     .exhaustive()
 }

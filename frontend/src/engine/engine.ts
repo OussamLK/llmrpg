@@ -21,7 +21,7 @@ export default class Engine{
         const {inventory, playerStatus} = this._llmConnector.initialState()
         this.playerStatus = playerStatus
         this.inventory = inventory
-        this._setNewState()
+        this._gameState = this._setNewState()
         this.currentFrames = this._gameState.then(state=>state.currentFrames())
     }
     /**
@@ -39,7 +39,7 @@ export default class Engine{
         await gameState.handleInput(playerInput)
         if (gameState.done()){
             const oldFrames = (await gameState.currentFrames()).informationFrames
-            this._setNewState()
+            this._gameState = this._setNewState()
             await this._gameState
                 .then(s=>s.currentFrames())
                 .then(frames=>this.currentFrames=Promise.resolve({informationFrames:[...oldFrames, ...frames.informationFrames], inputFrame: frames.inputFrame}))
@@ -50,10 +50,10 @@ export default class Engine{
         }
     }
 
-    private _setNewState = async ()=>{
-        const newStoryDevelopment = this._llmConnector.requestStoryDevelopment()
-        newStoryDevelopment.then(sd=>console.debug("new story development is: ", sd))
-        this._gameState = createGameState(newStoryDevelopment, this._llmConnector, this.playerStatus, this.inventory)
+    private _setNewState = async ():Promise<GameState>=>{
+        const newStoryDevelopment = await this._llmConnector.requestStoryDevelopment()
+        console.debug("new story development is: ", newStoryDevelopment)
+        return await createGameState(newStoryDevelopment.round, this._llmConnector, this.playerStatus, this.inventory)
 
     }
 }
