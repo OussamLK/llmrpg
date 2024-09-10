@@ -1,4 +1,4 @@
-import type {GameStateData, Round} from './types'
+import type {Round} from './types'
 import StoryState from './StoryState'
 import CombatState from './CombatState'
 import {match} from 'ts-pattern'

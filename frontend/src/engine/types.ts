@@ -1,13 +1,6 @@
 import type { Inventory, PlayerStatus, Enemy, Weapon, Medicine, KeyItem, Ammo } from "../types";
 
 
-export type GameStateData = {
-    inventory: Inventory;
-    playerStatus: PlayerStatus;
-    round: Round;
-    roundCount: number;
-};
-
 export type PlayerAction = (
     { type: 'attack'; enemyId: number; } |
     { type: 'move to enemy'; enemyId: number; } |

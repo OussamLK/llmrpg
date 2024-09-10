@@ -1,5 +1,5 @@
 import { PlayerInput, Frame, Inventory, PlayerStatus, Weapon, InventoryAffordance, Enemy, Affordance, InformationFrame, InputFrame, FrameSequence } from "../types";
-import { GameStateData, CombatRound, PlayerAction, DiceRoll, Turn, Loot, Round } from "./types";
+import { CombatRound, PlayerAction, DiceRoll, Turn, Loot, Round } from "./types";
 import { GameState } from "./GameState";
 import { match, P } from "ts-pattern";
 import LLMConnector from "../LLMConnector";

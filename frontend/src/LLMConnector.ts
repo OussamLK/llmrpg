@@ -1,18 +1,15 @@
 
-import { GameStateData, StoryRound, Loot } from "./engine/types"
-export type StoryDevelopment = GameStateData
-import { mockCombatState, mockStoryState } from './mocks/gameStates'
+import { StoryRound, Loot, Round } from "./engine/types"
+export type StoryDevelopment = Round
+import { mockCombatRound, mockStoryRound, mockInventory } from './mocks/gameStates'
 import { Inventory, PlayerStatus } from "./types"
 
 const gamePad: Loot = { type: "key item", name: "game pad", description: "A playstation game pad" }
-const storyRound: StoryRound = mockStoryState.round as StoryRound
-const lootState: GameStateData = {
-    ...mockStoryState,
-    round: {
+const storyRound: StoryRound = mockStoryRound as StoryRound
+const lootRound: Round = {
         ...storyRound,
         gamePrompt: "You found a game controller",
         loot: gamePad
-    }
 }
 
 export default interface LLMConnector {
@@ -26,13 +23,13 @@ export default interface LLMConnector {
 export class MockLLMConnector implements LLMConnector {
 
     events: string[]
-    gameStates: GameStateData[]
+    rounds: Round[]
     constructor() {
         this.events = []
-        this.gameStates = [lootState, mockCombatState, mockStoryState, lootState, mockCombatState].map(s=>structuredClone(s))
+        this.rounds = [lootRound, mockCombatRound, mockStoryRound, lootRound, mockCombatRound].map(s=>structuredClone(s))
     }
     async requestStoryDevelopment(): Promise<StoryDevelopment> {
-        const state = Promise.resolve(this.gameStates.pop())
+        const state = Promise.resolve(this.rounds.pop())
         //@ts-ignore
         return state
     }
@@ -46,7 +43,7 @@ export class MockLLMConnector implements LLMConnector {
         console.debug(`llmConnector: add event ${playerInputEvent}`)
     };
     initialState = () => {
-        return {inventory: this.gameStates[0].inventory, playerStatus: {health:100, equipedWeapon: 'pistol'}}
+        return {inventory: mockInventory, playerStatus: {health:100, equipedWeapon: 'pistol'}}
     }
 
 }

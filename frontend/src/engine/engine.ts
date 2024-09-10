@@ -55,7 +55,7 @@ export default class Engine{
     private _setNewState = async ():Promise<GameState>=>{
         const newStoryDevelopment = await this._llmConnector.requestStoryDevelopment()
         console.debug("new story development is: ", newStoryDevelopment)
-        return await createGameState(newStoryDevelopment.round, this._llmConnector, this.playerStatus, this.inventory, this.gameOverInterruptHandler)
+        return await createGameState(newStoryDevelopment, this._llmConnector, this.playerStatus, this.inventory, this.gameOverInterruptHandler)
 
     }
 }

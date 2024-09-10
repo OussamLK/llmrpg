@@ -1,5 +1,5 @@
 import { PlayerInput, Frame, InformationFrame, InputFrame, Inventory, PlayerStatus, InventoryAffordance, Weapon, FrameSequence } from "../types";
-import { DiceRoll, GameStateData, Round, StoryRound } from "./types";
+import { DiceRoll, Round, StoryRound } from "./types";
 import { GameState } from "./GameState";
 import LLMConnector from "../LLMConnector";
 

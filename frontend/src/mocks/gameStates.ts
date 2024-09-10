@@ -1,5 +1,5 @@
 import {FrameInventory, Inventory } from "../types"
-import { GameStateData, StoryRound, CombatRound, Round } from "../engine/types"
+import { StoryRound, CombatRound, Round } from "../engine/types"
 
 export const storyRound:StoryRound = {
   type:"story round",
@@ -48,15 +48,10 @@ export const mockPlayerStatus = {
     equipedWeapon: "pistol"
   }
 
-export function getGameState(round:Round) : GameStateData {
-  return{
-  inventory: mockInventory,
-  playerStatus: mockPlayerStatus,
-  round: round,
-  roundCount: 2
-}
+export function getGameState(round:Round) : Round {
+  return round
 
 }
 
-export const mockCombatState =  getGameState(combatRound)
-export const mockStoryState = getGameState(storyRound)
+export const mockCombatRound =  getGameState(combatRound)
+export const mockStoryRound = getGameState(storyRound)

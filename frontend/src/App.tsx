@@ -5,7 +5,7 @@ import type { PlayerInput, FrameSequence } from './types'
 import { Inventory } from './Inventory'
 import Scene from './Scenes/Scene'
 import { MockLLMConnector } from './LLMConnector'
-import { mockCombatState } from './mocks/gameStates'
+import { mockCombatRound } from './mocks/gameStates'
 
 const mockLLMConnector = new MockLLMConnector()
 let engine : Engine | undefined
