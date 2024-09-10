@@ -12,8 +12,9 @@ export default class CombatState implements GameState{
     private _currentFrames: Promise<FrameSequence>
     private _done: boolean
     private llmConnector: LLMConnector
+    private gameOverInterruptHandler: (msg:string)=>void
 
-    constructor(round:Round, diceRoll:DiceRoll, llmConnector:LLMConnector, playerStatus:PlayerStatus, inventory: Inventory){
+    constructor(round:Round, diceRoll:DiceRoll, llmConnector:LLMConnector, playerStatus:PlayerStatus, inventory: Inventory, gameOverInterruptHandler: (msg:string)=>void){
         if (round.type !== 'combat round')
             throw("You are trying to construct a combat state from non combat data")
         this._inventory = inventory
@@ -24,6 +25,7 @@ export default class CombatState implements GameState{
         this._currentFrames = Promise.resolve(frameSequence);
         this._done = done
         this.llmConnector = llmConnector
+        this.gameOverInterruptHandler = gameOverInterruptHandler
     }
 
     /**
@@ -196,6 +198,7 @@ export default class CombatState implements GameState{
        if (diceOutcome < enemy.accuracy) {
             this._playerStatus.health = Math.max(0, this._playerStatus.health -  enemy.attackDamage);
             outcomeMessage =  `Enemy hits you, damage ${enemy.attackDamage}`
+            if (this._playerStatus.health <= 0) this.gameOverInterruptHandler("You were killed")
         }
         else {
             outcomeMessage = `Enemy missed his attack`

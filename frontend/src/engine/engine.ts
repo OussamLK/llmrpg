@@ -15,14 +15,16 @@ export default class Engine{
     private playerStatus: PlayerStatus
     private inventory: Inventory
     private currentFrames: Promise<FrameSequence>
+    private gameOverInterruptHandler: (message:string)=>void
     
-    constructor(llmConnector: LLMConnector){
+    constructor(llmConnector: LLMConnector, gameOverInterruptHandler: (msg:string)=>void){
         this._llmConnector = llmConnector
         const {inventory, playerStatus} = this._llmConnector.initialState()
         this.playerStatus = playerStatus
         this.inventory = inventory
         this._gameState = this._setNewState()
         this.currentFrames = this._gameState.then(state=>state.currentFrames())
+        this.gameOverInterruptHandler = gameOverInterruptHandler
     }
     /**
      * Provides the current state frames to the UI
@@ -53,7 +55,7 @@ export default class Engine{
     private _setNewState = async ():Promise<GameState>=>{
         const newStoryDevelopment = await this._llmConnector.requestStoryDevelopment()
         console.debug("new story development is: ", newStoryDevelopment)
-        return await createGameState(newStoryDevelopment.round, this._llmConnector, this.playerStatus, this.inventory)
+        return await createGameState(newStoryDevelopment.round, this._llmConnector, this.playerStatus, this.inventory, this.gameOverInterruptHandler)
 
     }
 }

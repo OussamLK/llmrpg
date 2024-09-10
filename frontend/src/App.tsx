@@ -8,19 +8,20 @@ import { MockLLMConnector } from './LLMConnector'
 import { mockCombatState } from './mocks/gameStates'
 
 const mockLLMConnector = new MockLLMConnector()
-const engine = new Engine(mockLLMConnector)
+let engine : Engine | undefined
 export function App() {
+  const [gameOver, setGameOver] = useState(false)
   const [frames, setFrames] = useState<FrameSequence | undefined>()
 
   useEffect(() => {
-    async function setInitialFrames() { setFrames(await engine.getFrames()) }
-    setInitialFrames()
+    engine = engine || new Engine(mockLLMConnector, ()=>setGameOver(true))
+    engine.getFrames()
+      .then(frames=>
+        {
+          setFrames(frames);
+          console.debug("getting initial engine frames", frames)
+        })
   }, [])
-
-  async function getNextFrames(input: PlayerInput) {
-    engine.handleInput(input)
-    setFrames(await engine.getFrames())
-  }
 
   function popInformationFrame() {
     if (!frames) {
@@ -35,12 +36,16 @@ export function App() {
   }
 
 async function reportInput(input:PlayerInput){
-  await engine.handleInput(input)
-  setFrames(await engine.getFrames())
+  if (engine){
+    await engine.handleInput(input)
+    setFrames(await engine.getFrames())
+  }
+  else throw("game engine is not initialized")
   
 }
 
   const frame = frames?.informationFrames[0] || frames?.inputFrame //undefined while loading
+  if (gameOver) return <GameOver/>
 
   return frame ? <div className="app">
     <h1>Alive health {frame.playerStatus.health}</h1>

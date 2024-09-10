@@ -19,10 +19,11 @@ export async function createGameState(
         llmConnector:LLMConnector,
         playerStatus: PlayerStatus,
         inventory: Inventory,
+        gameOverInterruptHandler: (msg:string)=>void
     )
             :Promise<GameState>{
     return match(round.type)
-    .with('combat round', ()=>new CombatState(round, defaultDiceRoll, llmConnector, playerStatus, inventory))
+    .with('combat round', ()=>new CombatState(round, defaultDiceRoll, llmConnector, playerStatus, inventory, gameOverInterruptHandler))
     .with('story round', ()=>new StoryState(round, defaultDiceRoll, llmConnector, playerStatus, inventory))
     .exhaustive()
 }

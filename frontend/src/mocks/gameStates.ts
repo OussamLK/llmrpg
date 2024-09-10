@@ -9,7 +9,7 @@ export const combatRound: CombatRound = {
   type:"combat round",
   enemies: [
     {id: 1, description:"clicker", health: 10, position:"close", attackType:"close", accuracy: 70, attackDamage: 30},
-    //{id: 2, description:"runner", health: 7, position:"close", attackType:"close", accuracy: 70, attackDamage: 10},
+    {id: 2, description:"runner", health: 7, position:"close", attackType:"close", accuracy: 70, attackDamage: 10},
     //{id: 3, description:"runner", health: 6, position:"far", attackType:"close", accuracy: 70, attackDamage: 10},
     
   ],
