@@ -1,7 +1,8 @@
 import { PlayerInput, Frame, InformationFrame, InputFrame, Inventory, PlayerStatus, InventoryAffordance, Weapon, FrameSequence } from "../types";
-import { DiceRoll, Round, StoryRound } from "./types";
+import { DiceRoll, Loot, Round, StoryRound } from "./types";
 import { GameState } from "./GameState";
-import LLMConnector from "../LLMConnector";
+import ILLMConnector from "../LLMConnector";
+import {match, P} from 'ts-pattern'
 
 export default class StoryState implements GameState{
     private _inventory:Inventory
@@ -9,9 +10,9 @@ export default class StoryState implements GameState{
     private _round: StoryRound
     private _diceRoll: DiceRoll
     private _done: boolean
-    private llmConnector: LLMConnector
+    private llmConnector: ILLMConnector
 
-    constructor(round:Round, diceRoll:DiceRoll, llmConnector:LLMConnector, playerStatus: PlayerStatus, inventory:Inventory){
+    constructor(round:Round, diceRoll:DiceRoll, llmConnector:ILLMConnector, playerStatus: PlayerStatus, inventory:Inventory){
         if (round.type !== 'story round')
             throw("You are trying to construct a story state from non story data")
         this._inventory = inventory
@@ -36,14 +37,59 @@ export default class StoryState implements GameState{
             playerStatus:this._playerStatus,
             scene: {type: 'story scene', prompt: this._round.gamePrompt}
         }
-        const frameSequence = {informationFrames: [], inputFrame: frame}
-        return frameSequence
+        if (!this._round.loot){
+            const frameSequence = {informationFrames: [], inputFrame: frame}
+            return frameSequence
+        } 
+        else{
+            const loot = this._round.loot
+            this.addLootItem(loot)
+            return {
+                informationFrames: [
+                    {inventory: this._inventory,
+                    playerStatus: this._playerStatus,
+                    scene: {type:'event', prompt: `You found ${loot.name}`}}
+                ],
+                inputFrame: frame
+            }
+        }
 
     }
 
     done = ():boolean=>{
         return this._done
     }
+    private addLootItems(loot:Loot[]){
+        const copy = structuredClone(loot)
+        copy.sort((a,b)=>a.type === 'weapon' && b.type !== 'weapon' ? -1 : 1 )
+        copy.forEach(item=>this.addLootItem(item))
+    }
+    /**
+     * Always call weapons first when adding so that ammo can be added later
+     */
+    private addLootItem(loot:Loot){
+       match(loot)
+       .with({type:'key item'}, loot=>{
+            this._inventory.keyItems.push(loot)
+       }) 
+       .with({type:'medicine'}, loot=>this._inventory.medicine.push(loot))
+       .with({type:'ammo', quantity:P.select('quantity'), weaponName:P.select('weaponName')},
+            ({quantity, weaponName})=>{
+                const weaponEntry = this._inventory.weapons.find(w=>w.name === weaponName)
+                if (!weaponEntry)
+                    throw(`picking ammo of a wapon you do not have, weapon name is ${weaponName}`)
+                if (!weaponEntry.ammo)
+                    throw(`picking ammo of a weapon that does not require ammo ${weaponName}`)
+                weaponEntry.ammo += quantity;
+       })
+       .with({type: 'weapon', details: {type: 'distance'}}, weapon=>{
+            this._inventory.weapons.push({...weapon, ammo: 0})
+       })
+       .with({type: 'weapon', details: {type: 'melee'}}, weapon=>{
+            this._inventory.weapons.push({...weapon, ammo: null})
+       }).exhaustive()
+    }
+
 
     private async _getInventoryAffordances():Promise<InventoryAffordance[]>{
         const {weapons, medicine, keyItems } = this._inventory;

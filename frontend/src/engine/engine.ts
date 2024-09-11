@@ -1,4 +1,4 @@
-import LLMConnector from "../LLMConnector";
+import ILLMConnector from "../LLMConnector";
 import type { 
     InputFrame,
     InformationFrame,
@@ -10,14 +10,14 @@ import type {
 import { GameState, createGameState } from "./GameState";
 
 export default class Engine{
-    private _llmConnector: LLMConnector
+    private _llmConnector: ILLMConnector
     private _gameState!: Promise<GameState>
     private playerStatus: PlayerStatus
     private inventory: Inventory
     private currentFrames: Promise<FrameSequence>
     private gameOverInterruptHandler: (message:string)=>void
     
-    constructor(llmConnector: LLMConnector, gameOverInterruptHandler: (msg:string)=>void){
+    constructor(llmConnector: ILLMConnector, gameOverInterruptHandler: (msg:string)=>void){
         this._llmConnector = llmConnector
         const {inventory, playerStatus} = this._llmConnector.initialState()
         this.playerStatus = playerStatus

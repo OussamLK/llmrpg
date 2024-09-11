@@ -3,7 +3,7 @@ import StoryState from './StoryState'
 import CombatState from './CombatState'
 import {match} from 'ts-pattern'
 import type { PlayerInput, Frame, InformationFrame, InputFrame, FrameSequence, Inventory, PlayerStatus } from '../types'
-import LLMConnector from '../LLMConnector'
+import ILLMConnector from '../LLMConnector'
 
 export interface GameState {
     handleInput: (input: PlayerInput) => Promise<void>;
@@ -16,7 +16,7 @@ export function defaultDiceRoll():number{
 
 export async function createGameState(
         round:Round,
-        llmConnector:LLMConnector,
+        llmConnector:ILLMConnector,
         playerStatus: PlayerStatus,
         inventory: Inventory,
         gameOverInterruptHandler: (msg:string)=>void

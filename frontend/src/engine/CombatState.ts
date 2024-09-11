@@ -2,7 +2,7 @@ import { PlayerInput, Frame, Inventory, PlayerStatus, Weapon, InventoryAffordanc
 import { CombatRound, PlayerAction, DiceRoll, Turn, Loot, Round } from "./types";
 import { GameState } from "./GameState";
 import { match, P } from "ts-pattern";
-import LLMConnector from "../LLMConnector";
+import ILLMConnector from "../LLMConnector";
 
 export default class CombatState implements GameState{
     private _inventory:Inventory
@@ -11,10 +11,10 @@ export default class CombatState implements GameState{
     private _diceRoll: DiceRoll
     private _currentFrames: Promise<FrameSequence>
     private _done: boolean
-    private llmConnector: LLMConnector
+    private llmConnector: ILLMConnector
     private gameOverInterruptHandler: (msg:string)=>void
 
-    constructor(round:Round, diceRoll:DiceRoll, llmConnector:LLMConnector, playerStatus:PlayerStatus, inventory: Inventory, gameOverInterruptHandler: (msg:string)=>void){
+    constructor(round:Round, diceRoll:DiceRoll, llmConnector:ILLMConnector, playerStatus:PlayerStatus, inventory: Inventory, gameOverInterruptHandler: (msg:string)=>void){
         if (round.type !== 'combat round')
             throw("You are trying to construct a combat state from non combat data")
         this._inventory = inventory
@@ -63,6 +63,7 @@ export default class CombatState implements GameState{
                                                 }
                                             }
                                 informationFrames.push(lootFrame)
+                                this.llmConnector.reportEvent(`The player won the battle`)
                                 this._currentFrames = Promise.resolve({informationFrames, inputFrame: null})
                                 return
                             case 'lost':

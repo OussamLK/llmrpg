@@ -4,17 +4,16 @@ import Engine from './engine/engine'
 import type { PlayerInput, FrameSequence } from './types'
 import { Inventory } from './Inventory'
 import Scene from './Scenes/Scene'
-import { MockLLMConnector } from './LLMConnector'
-import { mockCombatRound } from './mocks/gameStates'
+import { MockLLMConnector, LLMConnector } from './LLMConnector'
 
-const mockLLMConnector = new MockLLMConnector()
+const llmConnector = new MockLLMConnector()
 let engine : Engine | undefined
 export function App() {
   const [gameOver, setGameOver] = useState(false)
   const [frames, setFrames] = useState<FrameSequence | undefined>()
 
   useEffect(() => {
-    engine = engine || new Engine(mockLLMConnector, ()=>setGameOver(true))
+    engine = engine || new Engine(llmConnector, ()=>setGameOver(true))
     engine.getFrames()
       .then(frames=>
         {

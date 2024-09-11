@@ -9,7 +9,6 @@ export type PlayerAction = (
 
 export type Round = CombatRound | StoryRound;
 
-
 export type CombatRound = {
     type: 'combat round';
     enemies: Enemy[];

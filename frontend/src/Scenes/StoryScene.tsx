@@ -18,7 +18,10 @@ export default function StoryScene(
                 </label>
                 <br/>
                 <button
-                    onClick={()=>onInput(input)}
+                    onClick={()=>{
+                        onInput(input);
+                        setInput("")
+                    }}
                     style={{padding: ".3em 1em " , margin: "1em"}}
                 >Enter</button>
             </div>
