@@ -5,7 +5,7 @@ import fs from 'fs'
 const pydantic_schemata = fs.readFileSync('../pydantic_models/models.pydantic', 'utf-8')
 console.debug("got from pydantic", pydantic_schemata)
 
-const OPEN_AI_MODEL= 'gpt-3.5-turbo-1106'  //&& 'gpt-4-1106-preview'
+const OPEN_AI_MODEL= 'gpt-3.5-turbo-1106' // && 'gpt-4-1106-preview'
 
 const openAI = new OpenAI()
 
@@ -13,11 +13,18 @@ const app = express();
 app.use(express.json())
 
 
-const STORY = `You play as Joel in the last of us, but just as he decides to go to Boston with Tommy and you get to meet Tess`
+const STORIES = [
+    `You play as Joel in the last of us, but just as he decides to go to Boston with Tommy and you get to meet Tess`,
+    `You play as a Roman general just before the fall of the republic, the goal is to lean about the history of the roman empire`
+
+]
+
+const STORY = STORIES[1] 
 
 const STORY_WRITTING_DIRECTIONS = `
-    explain the rational of each round you generate in the 'rational' key. Explain which objectives you are
-    trying to achieve by that generated round.
+    explain the story telling objectives for the round you are generating, how this will help engage the player before you generate the rest of the round.
+    introduce the game from the beginning, do now assume the player know anything about the world or the characters. but do it using in game naration not direct description, show dont tell
+
 
     Your goal is to engage the player, these are some tactics:
     
@@ -33,9 +40,14 @@ const STORY_WRITTING_DIRECTIONS = `
 
 
     Style:
-    1) Use simple concrete language.
+    1) Use simple concrete, simple and unceremonious language.
     2) You have an opening of the story, introduce the characters and the universe slowly. You have around 30 rounds of gameplay
     3) Explain in the rational where you are in the story.
+    4) The first 3 story rounds are critical.
+         a) start the first by introducing the scene while keeping some mystery around who you are playing, make the player explore the environment to discover where they are
+         b) give the player the opportunity to learn about who they are playing and what the environment is
+         c) start to introduce a hook by building up a mystery
+    5) Keep each story round short with at most 3 sentences
 `
 
 const GAME_DESCRIPTION = `We are playing an RPG with the player, you will be the game master.
