@@ -55,7 +55,7 @@ class Enemy(BaseModel):
 class StoryRound(BaseModel):
 	type: Literal['story round']
 	gamePrompt: str
-	loot: Optional[Loot]
+	loot: Optional[list[Loot]]
 	
 class Round(BaseModel):
 	detail: Union[CombatRound, StoryRound]

@@ -19,7 +19,7 @@ export type CombatRound = {
 export type StoryRound = {
     type: 'story round';
     gamePrompt: string;
-    loot?: Loot; //if loot is defined, the game expects no input. The player just grabs the loot
+    loot?: Loot[]; //if loot is defined, the game expects no input. The player just grabs the loot
 };
 /**
  * @deprecated

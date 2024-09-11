@@ -1,3 +1,4 @@
+import { match, P } from "ts-pattern";
 import ILLMConnector from "../LLMConnector";
 import type { 
     InputFrame,
@@ -5,9 +6,11 @@ import type {
     PlayerInput,
     FrameSequence,
     PlayerStatus,
-    Inventory
+    Inventory,
+    Frame
 } from "../types";
 import { GameState, createGameState } from "./GameState";
+import { Loot } from "./types";
 
 export default class Engine{
     private _llmConnector: ILLMConnector
@@ -54,10 +57,65 @@ export default class Engine{
 
     private _setNewState = async ():Promise<GameState>=>{
         const newStoryDevelopment = await this._llmConnector.requestStoryDevelopment()
-        console.debug("new story development is: ", newStoryDevelopment)
-        return await createGameState(newStoryDevelopment, this._llmConnector, this.playerStatus, this.inventory, this.gameOverInterruptHandler)
+        const gameState:GameState = await match(newStoryDevelopment)
+        .with(
+            {type: P.string}, 
+            async round=> await createGameState(round, this._llmConnector, this.playerStatus, this.inventory, this.gameOverInterruptHandler)
+            )
+        .with(P.array(), async lootItems=>{
+            this.loot(lootItems);
+            return await this._setNewState()
+        }).exhaustive()
+        return gameState
 
     }
+
+    private async loot(items:Loot[]){
+        this.addLootItems(items);
+        this._gameState = this._setNewState()
+        const lootFrames : InformationFrame[] = items.map(item=>({
+            inventory: this.inventory,
+            playerStatus: this.playerStatus,
+            scene:{type:'event', prompt: `You found a ${item.name}`}}))
+        await this._gameState
+                .then(s=>s.currentFrames())
+                .then(frames=>this.currentFrames=Promise.resolve({informationFrames:[...lootFrames, ...frames.informationFrames], inputFrame: frames.inputFrame}))
+            console.debug("state is done, current frames are now: ", await this.getFrames())
+        
+    }
+
+
+    private addLootItems(loot:Loot[]){
+        const copy = structuredClone(loot)
+        copy.sort((a,b)=>a.type === 'weapon' && b.type !== 'weapon' ? -1 : 1 )
+        copy.forEach(item=>this.addLootItem(item))
+    }
+    /**
+     * Always call weapons first when adding so that ammo can be added later
+     */
+    private addLootItem(loot:Loot){
+       match(loot)
+       .with({type:'key item'}, loot=>{
+            this.inventory.keyItems.push(loot)
+       }) 
+       .with({type:'medicine'}, loot=>this.inventory.medicine.push(loot))
+       .with({type:'ammo', quantity:P.select('quantity'), weaponName:P.select('weaponName')},
+            ({quantity, weaponName})=>{
+                const weaponEntry = this.inventory.weapons.find(w=>w.name === weaponName)
+                if (!weaponEntry)
+                    throw(`picking ammo of a wapon you do not have, weapon name is ${weaponName}`)
+                if (!weaponEntry.ammo)
+                    throw(`picking ammo of a weapon that does not require ammo ${weaponName}`)
+                weaponEntry.ammo += quantity;
+       })
+       .with({type: 'weapon', details: {type: 'distance'}}, weapon=>{
+            this.inventory.weapons.push({...weapon, ammo: 0})
+       })
+       .with({type: 'weapon', details: {type: 'melee'}}, weapon=>{
+            this.inventory.weapons.push({...weapon, ammo: null})
+       }).exhaustive()
+    }
+
 }
 
 

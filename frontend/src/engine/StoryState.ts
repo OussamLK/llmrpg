@@ -44,13 +44,13 @@ export default class StoryState implements GameState{
         else if (this._round.loot){
             
             const loot = this._round.loot
-            this.addLootItem(loot)
+            this.addLootItems(loot)
             return {
-                informationFrames: [
+                informationFrames: loot.map(loot=>(
                     {inventory: this._inventory,
                     playerStatus: this._playerStatus,
                     scene: {type:'event', prompt: `You found ${loot.name}`}}
-                ],
+                )),
                 inputFrame: null
             }
         }

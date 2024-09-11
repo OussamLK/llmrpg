@@ -15,11 +15,12 @@ app.use(express.json())
 
 const STORIES = [
     `You play as Joel in the last of us, but just as he decides to go to Boston with Tommy and you get to meet Tess`,
-    `You play as a Roman general just before the fall of the republic, the goal is to lean about the history of the roman empire`
+    `You play as a Roman general just before the fall of the republic, the goal is to lean about the history of the roman empire`,
+    `You play as a Irish revolutionary fighter in the war of independence again the britain`
 
 ]
 
-const STORY = STORIES[1] 
+const STORY = STORIES[0] 
 
 const STORY_WRITTING_DIRECTIONS = `
     explain the story telling objectives for the round you are generating, how this will help engage the player before you generate the rest of the round.
@@ -56,8 +57,8 @@ in story rounds, you present the player with a situation and ask them what they 
 Try to balance story to combat, maybe 4 stories rounds to one combat round, you answer in JSON format that follows this
 pydantic schema ${pydantic_schemata}.
 
-The loot is included inside the round, not seperately, so if you give the player some loot, they must be included as the loot key inside the round object
-as in {detail: {type: "story round", prompt: "detail about the loot", loot: Loot}}
+The loot should always be an array, so if you give the player some loot, as in [{type: 'weapon', name: 'pistol'}]
+if you give a distance weapon, always thing of giving ammo with it
 
 
 
@@ -79,6 +80,7 @@ app.post("/chatGPT", async (req, res)=>{
         model: OPEN_AI_MODEL
     })
     const respText = completion.choices[0].message.content
+    console.debug(`The llm response is: `, respText)
     if (!respText)
         throw("error fetching fron chatGPT")
     //@ts-ignore
@@ -100,6 +102,7 @@ app.get("/testAPI", async (req, res)=>{
             {role: "user", content: "let's generate a story round with some loot"}
         ],
         model: OPEN_AI_MODEL,
+        temperature: 1.5,
         response_format: {'type':'json_object'}
     })
     //@ts-ignore

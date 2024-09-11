@@ -1,6 +1,6 @@
 
 import { StoryRound, Loot, Round } from "./engine/types"
-export type StoryDevelopment = Round
+export type StoryDevelopment = Round | Loot[]
 import { mockCombatRound, mockStoryRound, mockInventory } from './mocks/gameStates'
 import { Inventory, PlayerStatus } from "./types"
 
@@ -9,7 +9,7 @@ const storyRound: StoryRound = mockStoryRound as StoryRound
 const lootRound: Round = {
         ...storyRound,
         gamePrompt: "You found a game controller",
-        loot: gamePad
+        loot: [gamePad]
 }
 
 
@@ -35,7 +35,7 @@ export class ApiConnector{
         })
         return await resp.json()
     }
-    async getNextRound(messages:GPTMessage[]):Promise<RoundData>{
+    async getNextRound(messages:GPTMessage[]):Promise<RoundData | Loot[]>{
         const data = await  this.post({messages})
         console.table(data)
         return data
@@ -95,6 +95,10 @@ export class LLMConnector implements ILLMConnector {
     async requestStoryDevelopment(): Promise<StoryDevelopment> {
          
         const state = await this.apiConnector.getNextRound(this.createContext())
+        if (Array.isArray(state)){
+            //this is a loot state
+            return state
+        }
         console.debug(`LLM rational: `, state.rational)
         this.interactionHistory.push({role: 'assistant', content: JSON.stringify(state)})
         if (state.detail.type === 'combat round')
