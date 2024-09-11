@@ -59,6 +59,7 @@ class StoryRound(BaseModel):
 	
 class Round(BaseModel):
 	detail: Union[CombatRound, StoryRound]
+	rational: str
 
 from pprint import pprint
 with open("models.pydantic", "w") as f:

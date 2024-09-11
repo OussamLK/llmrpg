@@ -13,7 +13,7 @@ const lootRound: Round = {
 }
 
 
-type RoundData = {detail: Round}
+type RoundData = {detail: Round, rational: string}
 type GPTMessage = {role: 'assistant' | 'user' | 'system', content:string}
 
 export default interface ILLMConnector {
@@ -95,6 +95,7 @@ export class LLMConnector implements ILLMConnector {
     async requestStoryDevelopment(): Promise<StoryDevelopment> {
          
         const state = await this.apiConnector.getNextRound(this.createContext())
+        console.debug(`LLM rational: `, state.rational)
         this.interactionHistory.push({role: 'assistant', content: JSON.stringify(state)})
         if (state.detail.type === 'combat round')
             state.detail.enemies = state.detail.enemies.map((enemy, id)=>({...enemy, id:id+1}))
