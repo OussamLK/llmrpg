@@ -37,11 +37,12 @@ export default class StoryState implements GameState{
             playerStatus:this._playerStatus,
             scene: {type: 'story scene', prompt: this._round.gamePrompt}
         }
-        if (!this._round.loot){
+        if (!this._done){
             const frameSequence = {informationFrames: [], inputFrame: frame}
             return frameSequence
         } 
-        else{
+        else if (this._round.loot){
+            
             const loot = this._round.loot
             this.addLootItem(loot)
             return {
@@ -50,9 +51,10 @@ export default class StoryState implements GameState{
                     playerStatus: this._playerStatus,
                     scene: {type:'event', prompt: `You found ${loot.name}`}}
                 ],
-                inputFrame: frame
+                inputFrame: null
             }
         }
+        else return {informationFrames: [], inputFrame: null}
 
     }
 

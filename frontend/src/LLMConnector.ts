@@ -59,8 +59,7 @@ export class MockLLMConnector implements ILLMConnector {
     }
 
     async requestStoryDevelopment(): Promise<StoryDevelopment> {
-        const state = Promise.resolve(this.rounds.pop())
-        //@ts-ignore
+        const state = Promise.resolve(this.rounds.splice(0,1)[0])
         return state     
     }
     reportEvent(eventDescription: string) {
