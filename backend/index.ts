@@ -5,7 +5,7 @@ import fs from 'fs'
 const pydantic_schemata = fs.readFileSync('../pydantic_models/models.pydantic', 'utf-8')
 console.debug("got from pydantic", pydantic_schemata)
 
-const OPEN_AI_MODEL= 'gpt-3.5-turbo-1106' // && 'gpt-4-1106-preview'
+const OPEN_AI_MODEL= 'gpt-3.5-turbo-1106'  && 'gpt-4-1106-preview'
 
 const openAI = new OpenAI()
 
@@ -41,7 +41,7 @@ const STORY_WRITTING_DIRECTIONS = `
 
 
     Style:
-    1) Use simple concrete, simple and unceremonious language.
+    1) Show don't tell: Use simple, concrete and unceremonious language.
     2) You have an opening of the story, introduce the characters and the universe slowly. You have around 30 rounds of gameplay
     3) Explain in the rational where you are in the story.
     4) The first 3 story rounds are critical.
@@ -57,10 +57,7 @@ in story rounds, you present the player with a situation and ask them what they 
 Try to balance story to combat, maybe 4 stories rounds to one combat round, you answer in JSON format that follows this
 pydantic schema ${pydantic_schemata}.
 
-The loot should always be an array, so if you give the player some loot, as in [{type: 'weapon', name: 'pistol'}]
-if you give a distance weapon, always thing of giving ammo with it
-
-
+Objects that the player pick have to be represented in the 'loot' key as described by the Loot schema
 
 for the story : ${STORY}.
 
@@ -80,7 +77,6 @@ app.post("/chatGPT", async (req, res)=>{
         model: OPEN_AI_MODEL
     })
     const respText = completion.choices[0].message.content
-    console.debug(`The llm response is: `, respText)
     if (!respText)
         throw("error fetching fron chatGPT")
     //@ts-ignore
@@ -88,6 +84,9 @@ app.post("/chatGPT", async (req, res)=>{
     if (!match){
         throw(`The match is null here:\n ${respText}`)
     }
+    const {round, loot} = JSON.parse(match[0])
+    console.debug(`The llm answer is: `, round)
+    if (loot) console.debug(`The loot is: `, loot)
     res.send(match[0])
 })
 

@@ -41,7 +41,6 @@ class Ammo(BaseModel):
 class CombatRound(BaseModel):
 	type: Literal['combat round'] 
 	enemies: list[Enemy]
-	loot: Optional[list[Loot]]
 	turn: Literal['player']
 
 class Enemy(BaseModel):
@@ -55,13 +54,17 @@ class Enemy(BaseModel):
 class StoryRound(BaseModel):
 	type: Literal['story round']
 	gamePrompt: str
-	loot: Optional[list[Loot]]
 	
-class Round(BaseModel):
-	detail: Union[CombatRound, StoryRound]
+class Response(BaseModel):
+	round: Union[CombatRound, StoryRound]
 	rational: str
+	loot: Optional[list[Loot]]
+
+
+
+
 
 from pprint import pprint
 with open("models.pydantic", "w") as f:
-	pprint(Round.model_json_schema(), f)
+	pprint(Response.model_json_schema(), f)
 	

@@ -1,6 +1,6 @@
 
 import { StoryRound, Loot, Round } from "./engine/types"
-export type StoryDevelopment = Round | Loot[]
+export type StoryDevelopment = Round
 import { mockCombatRound, mockStoryRound, mockInventory } from './mocks/gameStates'
 import { Inventory, PlayerStatus } from "./types"
 
@@ -13,7 +13,7 @@ const lootRound: Round = {
 }
 
 
-type RoundData = {detail: Round, rational: string}
+type LLMResponse = {round: Round, rational: string, loot?: {detail:Loot}[]}
 type GPTMessage = {role: 'assistant' | 'user' | 'system', content:string}
 
 export default interface ILLMConnector {
@@ -35,7 +35,7 @@ export class ApiConnector{
         })
         return await resp.json()
     }
-    async getNextRound(messages:GPTMessage[]):Promise<RoundData | Loot[]>{
+    async getNextRound(messages:GPTMessage[]):Promise<LLMResponse>{
         const data = await  this.post({messages})
         console.table(data)
         return data
@@ -95,16 +95,15 @@ export class LLMConnector implements ILLMConnector {
     async requestStoryDevelopment(): Promise<StoryDevelopment> {
          
         const state = await this.apiConnector.getNextRound(this.createContext())
-        if (Array.isArray(state)){
-            //this is a loot state
-            return state
-        }
         console.debug(`LLM rational: `, state.rational)
         this.interactionHistory.push({role: 'assistant', content: JSON.stringify(state)})
-        if (state.detail.type === 'combat round')
-            state.detail.enemies = state.detail.enemies.map((enemy, id)=>({...enemy, id:id+1}))
+        if (state.round.type === 'combat round')
+            state.round.enemies = state.round.enemies.map((enemy, id)=>({...enemy, id:id+1}))
         //@ts-ignore
-        return state.detail
+        if (state.loot){
+            return {...state.round, loot:state.loot.map(item=>item.detail)}
+        }
+        return state.round
     }
     reportEvent(eventDescription: string) {
         this.interactionHistory.push({role: 'user', content: eventDescription})
