@@ -20,8 +20,9 @@ export default class Engine{
     private currentFrames: Promise<FrameSequence>
     private gameOverInterruptHandler: (message:string)=>void
     
-    constructor(llmConnector: ILLMConnector, gameOverInterruptHandler: (msg:string)=>void){
+    constructor(story:string, keyDevelopments:string[], llmConnector: ILLMConnector, gameOverInterruptHandler: (msg:string)=>void){
         this._llmConnector = llmConnector
+        llmConnector.initStory(story, keyDevelopments)
         const {inventory, playerStatus} = this._llmConnector.initialState()
         this.playerStatus = playerStatus
         this.inventory = inventory

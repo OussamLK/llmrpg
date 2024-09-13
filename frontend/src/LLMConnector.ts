@@ -22,6 +22,7 @@ export default interface ILLMConnector {
     //getEnemyAction:(gameState)=>{EnemyAction:EnemyAction, prompt:string}
     reportPlayerInput: (input:string) =>void
     initialState: ()=>{inventory:Inventory, playerStatus: PlayerStatus}
+    initStory: (story:string, keyDevelopments: string[])=>void
 }
 
 export class ApiConnector{
@@ -75,6 +76,9 @@ export class MockLLMConnector implements ILLMConnector {
     initialState = () => {
         return {inventory: mockInventory, playerStatus: {health:80, equipedWeapon: 'pistol'}}
     }
+    initStory = (story: string, keyDevelopments: string[]) => {
+        return
+    };
 
 }
 
@@ -83,6 +87,8 @@ export class LLMConnector implements ILLMConnector {
     interactionHistory: GPTMessage[]
     rounds: Round[]
     apiConnector: ApiConnector
+    story: string | undefined
+    keyDevelopments: string[] | undefined
     constructor() {
         this.interactionHistory = []
         this.rounds = [lootRound, mockCombatRound, mockStoryRound, lootRound, mockCombatRound].map(s=>structuredClone(s))
@@ -90,10 +96,16 @@ export class LLMConnector implements ILLMConnector {
     }
 
     createContext = ():GPTMessage[]=>{
-        return this.interactionHistory
+        if (!this.story || !this.keyDevelopments){
+            throw("first initialize story and key developments")
+        }
+        return [{role:'user', content: `The game story is: '${this.story}', key developments are '${this.keyDevelopments.map((dev, id)=>`${id+1}) ${dev}`).join('\n')}'`},...this.interactionHistory]
     }
 
     async requestStoryDevelopment(): Promise<StoryDevelopment> {
+        if (!this.story || !this.keyDevelopments){
+            throw("first initialize story and key developments")
+        }
          
         const state = await this.apiConnector.getNextRound(this.createContext())
         console.debug(`LLM rational: `, state.rational)
@@ -118,5 +130,9 @@ export class LLMConnector implements ILLMConnector {
     initialState = () => {
         return {inventory: {weapons: [], medicine: [], keyItems: []}, playerStatus: {health:100, equipedWeapon: null}}
     }
+    initStory = (story: string, keyDevelopments: string[]) =>{
+        this.story = story;
+        this.keyDevelopments = keyDevelopments
+    };
 
 }

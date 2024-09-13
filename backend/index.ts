@@ -13,14 +13,6 @@ const app = express();
 app.use(express.json())
 
 
-const STORIES = [
-    `You play as Joel in the last of us, but just as he decides to go to Boston with Tommy and you get to meet Tess`,
-    `You play as a Roman general just before the fall of the republic, the goal is to lean about the history of the roman empire`,
-    `You play as a Irish revolutionary fighter in the war of independence again the britain`
-
-]
-
-const STORY = STORIES[0] 
 
 const STORY_WRITTING_DIRECTIONS = `
     explain the story telling objectives for the round you are generating, how this will help engage the player before you generate the rest of the round.
@@ -59,9 +51,9 @@ pydantic schema ${pydantic_schemata}.
 
 Objects that the player pick have to be represented in the 'loot' key as described by the Loot schema
 
-for the story : ${STORY}.
-
 These are instructions on story telling: ${STORY_WRITTING_DIRECTIONS}
+
+There are key events in the story that you might want to include that are going to be given to you
 
 `
 

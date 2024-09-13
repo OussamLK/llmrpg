@@ -6,20 +6,31 @@ import { Inventory } from './Inventory'
 import Scene from './Scenes/Scene'
 import { MockLLMConnector, LLMConnector } from './LLMConnector'
 
-const llmConnector = new MockLLMConnector()
+const llmConnector = new LLMConnector()
 let engine : Engine | undefined
-export function App() {
+function App(){
+  const [story, setStory] = useState<string | undefined>(undefined)
+  const [keyDevelopments, setKeyDevelopments] = useState<string[] | undefined>(undefined)
+  function onStart(story:string, keyDevelopments:string[]){
+    setStory(story)
+    setKeyDevelopments(keyDevelopments)
+  }
+  if (!story ||  !keyDevelopments) return <StoryEditor onStart={onStart} />
+  else return <Game story={story} keyDevelopments={keyDevelopments}/>
+}
+export function Game({story, keyDevelopments}: {story:string, keyDevelopments:string[]}) {
   const [gameOver, setGameOver] = useState(false)
   const [frames, setFrames] = useState<FrameSequence | undefined>()
 
   useEffect(() => {
-    engine = engine || new Engine(llmConnector, ()=>setGameOver(true))
+    engine = engine || new Engine(story, keyDevelopments, llmConnector, ()=>setGameOver(true))
     engine.getFrames()
       .then(frames=>
         {
           setFrames(frames);
           console.debug("getting initial engine frames", frames)
         })
+      console.log(story, keyDevelopments)
   }, [])
 
   function popInformationFrame() {
@@ -68,5 +79,47 @@ async function reportInput(input:PlayerInput){
 function GameOver() {
   return <p>You died!</p>
 }
+
+function StoryEditor({onStart}:{onStart:(story:string, keyDevelopments:string[])=>void}){
+  const [story, setStory] = useState(`You play as a survivor in a post nuclear world, wakes up in a vault and need to find a part for a water purification system`)
+  const [currentDevelopmentText, setCurrentDevelopmentText] = useState(``)
+  const [keyDevelopments, setKeyDevelopments] = useState([{id:0, content:`The player gets emprisoned`}, {id:1, content:`The player gets incapacitated and needs find help by an enemy deserter`}])
+
+  return <div>
+            <label>
+              Describe the background of the story you want to play
+              <br/>
+            <textarea rows={8} cols={60} value={story} onChange={e=>setStory(e.currentTarget.value)} />
+            </label>
+            <br/>
+            <label>
+              Add a key story development
+              <br/>
+              <textarea
+                rows={3}
+                cols={60}
+                value={currentDevelopmentText}
+                onChange={e=>setCurrentDevelopmentText(e.currentTarget.value)} />
+              <br/>
+              <button onClick={()=>{
+                const newID = keyDevelopments.length === 0? 0 :  Math.max(...keyDevelopments.map(d=>d.id)) + 1
+                setKeyDevelopments(prev=>[...prev, {id:newID, content: currentDevelopmentText}])
+                setCurrentDevelopmentText('')
+
+              }}>Add</button>
+            </label> 
+            <br/>
+            <div>
+            <h2>Key Events</h2>
+            <ul>
+              {keyDevelopments.map(dev=><li key={dev.id}><span>{dev.content} <button onClick={()=>setKeyDevelopments(prev=>prev.filter(dev_=>dev_.id !== dev.id))}>delete</button></span></li>)}
+            </ul>
+            <br/>
+            </div>
+            <button
+              onClick={()=>onStart(story, keyDevelopments.map(dev=>dev.content))}>Start the game</button>
+        </div>
+}
+
 
 export default App
