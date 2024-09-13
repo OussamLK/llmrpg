@@ -40,6 +40,7 @@ export class ApiConnector{
         console.table(data)
         return data
     }
+
 }
 
 export class MockLLMConnector implements ILLMConnector {
@@ -115,7 +116,7 @@ export class LLMConnector implements ILLMConnector {
         console.debug(`llmConnector: add event ${playerInputEvent}`)
     };
     initialState = () => {
-        return {inventory: mockInventory, playerStatus: {health:100, equipedWeapon: 'pistol'}}
+        return {inventory: {weapons: [], medicine: [], keyItems: []}, playerStatus: {health:100, equipedWeapon: null}}
     }
 
 }

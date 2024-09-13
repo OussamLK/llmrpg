@@ -57,7 +57,7 @@ export type Inventory = {
 
 export type PlayerStatus = {
     health: number,
-    equipedWeapon: string
+    equipedWeapon: string | null
 }
 
 

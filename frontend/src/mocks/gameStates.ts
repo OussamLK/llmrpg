@@ -30,7 +30,7 @@ export const mockInventory:Inventory ={
         name:  "pistol",
         damage: 30,
         details: {type: "distance", ammoName: "bullets", difficulty: 30},
-        ammo: 20
+        ammo: 1
       },
       {
         type: 'weapon',

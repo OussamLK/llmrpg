@@ -3,7 +3,7 @@ import type { InventoryAffordance, FrameInventory, Weapon, Medicine, KeyItem, In
 
 export function Inventory({ inventory, equipedWeapon, onClick }:
     { inventory: FrameInventory,
-      equipedWeapon: string,
+      equipedWeapon: string | null,
       onClick: (args:InventoryInput)=>void }) {
         const active = inventory.affordances !== null
         return <div className={active ? "inventory":"inventory-inactive"}>
@@ -35,7 +35,7 @@ export function Inventory({ inventory, equipedWeapon, onClick }:
 }
 function WeaponItem({weapon, affordances, equipedWeapon, onClick}:
           {weapon:Weapon & {ammo: number | null},
-          equipedWeapon: string,
+          equipedWeapon: string | null,
            affordances?:InventoryAffordance[] | null,
            onClick: (args:InventoryInput)=>void
           }){

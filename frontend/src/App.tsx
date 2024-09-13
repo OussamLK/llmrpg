@@ -6,7 +6,7 @@ import { Inventory } from './Inventory'
 import Scene from './Scenes/Scene'
 import { MockLLMConnector, LLMConnector } from './LLMConnector'
 
-const llmConnector = new LLMConnector()
+const llmConnector = new MockLLMConnector()
 let engine : Engine | undefined
 export function App() {
   const [gameOver, setGameOver] = useState(false)

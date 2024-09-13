@@ -80,9 +80,12 @@ export default class StoryState implements GameState{
                 const weaponEntry = this._inventory.weapons.find(w=>w.name === weaponName)
                 if (!weaponEntry)
                     throw(`picking ammo of a wapon you do not have, weapon name is ${weaponName}`)
-                if (!weaponEntry.ammo)
+                if (weaponEntry.details.type !== 'distance'){
+                    console.error(`weapon causing the problem is`, weaponEntry)
                     throw(`picking ammo of a weapon that does not require ammo ${weaponName}`)
-                weaponEntry.ammo += quantity;
+                }
+                if (!weaponEntry.ammo) weaponEntry.ammo = quantity
+                else weaponEntry.ammo += quantity;
        })
        .with({type: 'weapon', details: {type: 'distance'}}, weapon=>{
             this._inventory.weapons.push({...weapon, ammo: 0})

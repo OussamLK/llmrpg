@@ -71,7 +71,7 @@ These are instructions on story telling: ${STORY_WRITTING_DIRECTIONS}
 app.post("/chatGPT", async (req, res)=>{
     const {messages: frontendMessages} = req.body
     const messages =[{role:'system', content: GAME_DESCRIPTION},...frontendMessages] 
-    console.debug("sending messages: ",messages)
+    console.debug("sending messages: ", frontendMessages)
     const completion = await openAI.chat.completions.create({
         messages,
         model: OPEN_AI_MODEL

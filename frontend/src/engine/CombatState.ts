@@ -147,11 +147,14 @@ export default class CombatState implements GameState{
         let equipedWeapon = undefined
         {
             //sanity checks
-            if (round.type !== 'combat round') throw("Can not attack in non combat rounds")
-            const attackPossible = this._weaponTypeMatchesEnemyPosition(enemyId) 
-            if(! attackPossible) throw new Error("impossible to attack enemy with current weapon")
             equipedWeapon = this._getEquipedWeapon()
             if (!equipedWeapon) throw new Error("can not find equiped weapon")
+            if (round.type !== 'combat round') throw("Can not attack in non combat rounds")
+            const attackPossible = this.weaponUsableAgainstEnemy(enemyId) 
+            if(! attackPossible) throw new Error("impossible to attack enemy with current weapon")
+        }
+        if (equipedWeapon.ammo){
+            equipedWeapon.ammo -= 1
         }
         const diceOutcome = this._diceRoll()
         const attackSucceeded = diceOutcome < 100-equipedWeapon.details.difficulty
@@ -262,21 +265,25 @@ export default class CombatState implements GameState{
         this._playerStatus.equipedWeapon = weaponName
     }
 
+    private weaponUsableAgainstEnemy(enmeyId:number){
+        const equipedWeapon = this._getEquipedWeapon();
+        if (!equipedWeapon) return false
+        const hasAmmoIfNeeded = equipedWeapon.details.type === 'melee' || equipedWeapon.ammo && equipedWeapon.ammo > 0
+        return this._weaponTypeMatchesEnemyPosition(enmeyId) && hasAmmoIfNeeded
+    }
+
     private _weaponTypeMatchesEnemyPosition(enemyId: number){
         const enemy = this._getEnemyById(enemyId);
         if (!enemy) throw(`Can not find enemy ${enemyId}`)
         const equipedWeapon = this._getEquipedWeapon();
+        if (!equipedWeapon) return false
         return (equipedWeapon.details.type === 'distance' && enemy.position === 'far') ||
                (equipedWeapon.details.type === 'melee' && enemy.position === 'close')
 
     }
-    private _getEquipedWeapon():Weapon & {ammo:number | null;}{
+    private _getEquipedWeapon():Weapon & {ammo:number | null;} | null{
         const weapon =  this._inventory.weapons.find(w=>w.name === this._playerStatus.equipedWeapon)
-        if (!weapon) {
-            console.error(`Can not find equiped weapon,`, this)
-            throw("Can not find equiped weapon")
-        }
-        return weapon
+        return weapon  || null
     }
 
 
@@ -299,9 +306,12 @@ export default class CombatState implements GameState{
                 const weaponEntry = this._inventory.weapons.find(w=>w.name === weaponName)
                 if (!weaponEntry)
                     throw(`picking ammo of a wapon you do not have, weapon name is ${weaponName}`)
-                if (!weaponEntry.ammo)
+                if (weaponEntry.details.type !== 'distance'){
+                    console.error(`weapon causing the problem is`, weaponEntry)
                     throw(`picking ammo of a weapon that does not require ammo ${weaponName}`)
-                weaponEntry.ammo += quantity;
+                }
+                if (!weaponEntry.ammo) weaponEntry.ammo = quantity
+                else weaponEntry.ammo += quantity;
        })
        .with({type: 'weapon', details: {type: 'distance'}}, weapon=>{
             this._inventory.weapons.push({...weapon, ammo: 0})
@@ -367,9 +377,9 @@ export default class CombatState implements GameState{
         return this._getAvailableActions().map(action=>this._createCombatAffordance(action))
     }
     private _getAvailableActions(){
-                const wpeaonReachableEnemies: Enemy[] = this._round.enemies
-                    .filter(e=>this._weaponTypeMatchesEnemyPosition(e.id))
-                const attackActions:PlayerAction[] = wpeaonReachableEnemies.map(e=>({type:"attack", enemyId: e.id}))
+                const attackableEnemies: Enemy[] = this._round.enemies
+                    .filter(e=>this.weaponUsableAgainstEnemy(e.id))
+                const attackActions:PlayerAction[] = attackableEnemies.map(e=>({type:"attack", enemyId: e.id}))
                 const distantEnemies = this._round.enemies.filter(e=>e.position === 'far')
                 const moveToActions: PlayerAction[] = distantEnemies.map(e=>({
                     type: 'move to enemy',
