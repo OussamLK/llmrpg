@@ -73,7 +73,7 @@ export class MockLLMConnector implements ILLMConnector {
         console.debug(`llmConnector: add event ${playerInputEvent}`)
     };
     initialState = () => {
-        return {inventory: mockInventory, playerStatus: {health:100, equipedWeapon: 'pistol'}}
+        return {inventory: mockInventory, playerStatus: {health:80, equipedWeapon: 'pistol'}}
     }
 
 }

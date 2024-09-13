@@ -95,6 +95,10 @@ export default class CombatState implements GameState{
                 this.equipWeapon(itemName)
                 this._currentFrames = Promise.resolve({informationFrames:[], inputFrame: this.combatInputFrame()})
             })
+            .with({type:'inventory', action:'use', itemName:P.select()}, itemName=>{
+                this.useItem(itemName)
+                this._currentFrames = Promise.resolve({informationFrames:[], inputFrame: this.combatInputFrame()})
+            })
             .with({type:'combat', action: 'retreat'}, ()=>{
                 this.retreat()
                 this._currentFrames = Promise.resolve({informationFrames: [], inputFrame: this.combatInputFrame()})
@@ -263,6 +267,22 @@ export default class CombatState implements GameState{
         if (!weaponExists)
             throw(`I can not find wapon ${weaponName}, I have '${this._inventory.weapons.map(w=>w.name).join(", ")}', in my inventory`)
         this._playerStatus.equipedWeapon = weaponName
+    }
+    useItem(itemName: string) {
+        const medicine = this._inventory.medicine.find(item=>item.name === itemName)
+        if (medicine){
+            this._playerStatus.health = Math.min(100, this._playerStatus.health + medicine.healthGain)
+            this._inventory.medicine = this._inventory.medicine.filter(med=>med.name !== itemName)
+            return
+        }
+        const keyItem = this._inventory.keyItems.find(item=>item.name === itemName)
+        if (keyItem){
+            this.llmConnector.reportPlayerInput(`User used key item ${keyItem.name}`)
+            return
+        }
+        throw(`Trying to use ${itemName}, yet I can not find it in medicine or key items`)
+
+        
     }
 
     private weaponUsableAgainstEnemy(enmeyId:number){
