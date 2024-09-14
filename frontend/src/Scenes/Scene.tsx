@@ -15,6 +15,6 @@ export default function Scene(
     else if (sceneType === 'event' || sceneType === 'random event')
         content = <EventScene scene={scene} onFinish={onFinish}/>
     else sceneType satisfies never
-    return <div className="scene">{content}</div>
+    return <div>{content}</div>
 
 }
