@@ -1,13 +1,63 @@
 import express from 'express';
 import OpenAI from 'openai'
 import fs from 'fs'
+import crypto from 'crypto'
 
 const pydantic_schemata = fs.readFileSync('../pydantic_models/models.pydantic', 'utf-8')
 console.debug("got from pydantic", pydantic_schemata)
 
-const OPEN_AI_MODEL= 'gpt-3.5-turbo-1106' //  && 'gpt-4-1106-preview'
+const OPEN_AI_MODEL= 'gpt-3.5-turbo-1106' // && 'gpt-4-1106-preview'
+type CHATGPTMessage = OpenAI.Chat.Completions.ChatCompletionMessageParam
 
-const openAI = new OpenAI()
+
+//const openAI = new OpenAI()
+class Completion{
+    openAI: OpenAI
+    cache: {[hash: string] : Promise<string | null>}
+    cacheDelayMiliseconds: number
+    constructor(cacheDelayMiliseconds: number){
+        this.openAI = new OpenAI()
+        this.cache = {}
+        this.cacheDelayMiliseconds = cacheDelayMiliseconds
+    }
+
+    private hash(messages:CHATGPTMessage[]):string{
+        const time = new Date()
+        const ts = time.getMinutes()*60000+time.getSeconds()*1000+time.getMilliseconds()
+        const ts_slot = Math.round(ts/this.cacheDelayMiliseconds)
+        const messages_json = JSON.stringify(messages)
+        const h = crypto.createHash('sha256');
+        h.update(`${ts_slot} , ${messages_json}`)
+        return h.digest('hex')
+    }
+
+    private async complete(messages:CHATGPTMessage[]):Promise<string | null>{
+        const resp = await this.openAI.chat.completions.create({
+            messages,
+            model: OPEN_AI_MODEL,
+            response_format: {type: 'json_object'},
+            temperature: 0.7
+        })
+        return resp.choices[0].message.content
+    }
+
+    /**
+     * Cache LLM response in order to avoid incuring cost when react double renders (happens on initial render only though).
+     */
+    cached(messages:CHATGPTMessage[]):Promise<string | null>{
+        const hash = this.hash(messages)
+        if (this.cache[hash] !== undefined){
+            console.debug("fetching from cache")
+            return this.cache[this.hash(messages)]
+        }
+        else {
+            const resp = this.complete(messages)
+            this.cache[hash] = resp
+            return resp
+        }
+    }
+}
+const completion = new Completion(500)
 
 const app = express();
 app.use(express.json())
@@ -64,11 +114,7 @@ app.post("/chatGPT", async (req, res)=>{
     const {messages: frontendMessages} = req.body
     const messages =[{role:'system', content: GAME_DESCRIPTION},...frontendMessages] 
     console.debug("sending messages: ", frontendMessages)
-    const completion = await openAI.chat.completions.create({
-        messages,
-        model: OPEN_AI_MODEL
-    })
-    const respText = completion.choices[0].message.content
+    const respText = await completion.cached(messages)
     if (!respText)
         throw("error fetching fron chatGPT")
     //@ts-ignore
@@ -87,17 +133,13 @@ app.get("/", (req, res)=>{
 })
 
 app.get("/testAPI", async (req, res)=>{
-    const completion = await openAI.chat.completions.create({
-        messages: [{role: "system", content: `This is the pydantic schema you should use for json answers ${pydantic_schemata}`},
+    const resp = await completion.cached(
+        [{role: "system", content: `This is the pydantic schema you should use for json answers ${pydantic_schemata}`},
             {role: "assistant", content: "Let's start the game in the unverse of 19th century revolutionary latin america, the goal is to teach about simon bolivar history"},
-            {role: "user", content: "let's generate a story round with some loot"}
-        ],
-        model: OPEN_AI_MODEL,
-        temperature: 1.5,
-        response_format: {'type':'json_object'}
-    })
+            {role: "user", content: "let's generate a story round with some loot"}]
+    )
     //@ts-ignore
-    res.send(completion.choices[0].message.content)
+    res.send(resp)
 })
 
 const server = app.listen(3000, async ()=>{

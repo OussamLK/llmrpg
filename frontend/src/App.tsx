@@ -6,7 +6,7 @@ import { Inventory } from './Inventory'
 import Scene from './Scenes/Scene'
 import { MockLLMConnector, LLMConnector } from './LLMConnector'
 
-const llmConnector = new MockLLMConnector()
+const llmConnector = new LLMConnector()
 let engine : Engine | undefined
 function App(){
   const [story, setStory] = useState<string | undefined>(undefined)
@@ -57,7 +57,6 @@ async function reportInput(input:PlayerInput){
   else throw("game engine is not initialized")
   
 }
-
   const frame = frames?.informationFrames[0] || frames?.inputFrame //undefined while loading
   if (gameOver) return <GameOver/>
 
