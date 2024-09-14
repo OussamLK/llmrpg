@@ -61,8 +61,11 @@ export class MockLLMConnector implements ILLMConnector {
     }
 
     async requestStoryDevelopment(): Promise<StoryDevelopment> {
-        const state = Promise.resolve(this.rounds.splice(0,1)[0])
-        return state     
+        const state = this.rounds.splice(0,1)[0]
+        const delayed:Promise<Round> = new Promise((res)=>{
+            setTimeout(()=>res(state), 3000)
+        })
+        return delayed
     }
     reportEvent(eventDescription: string) {
         this.events.push(eventDescription)

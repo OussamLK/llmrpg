@@ -6,7 +6,7 @@ import { Inventory } from './Inventory'
 import Scene from './Scenes/Scene'
 import { MockLLMConnector, LLMConnector } from './LLMConnector'
 
-const llmConnector = new LLMConnector()
+const llmConnector = new MockLLMConnector()
 let engine : Engine | undefined
 function App(){
   const [story, setStory] = useState<string | undefined>(undefined)
@@ -21,6 +21,7 @@ function App(){
 export function Game({story, keyDevelopments}: {story:string, keyDevelopments:string[]}) {
   const [gameOver, setGameOver] = useState(false)
   const [frames, setFrames] = useState<FrameSequence | undefined>()
+  const [fetchingFrames, setFetchingFrames] = useState(false)
 
   useEffect(() => {
     engine = engine || new Engine(story, keyDevelopments, llmConnector, ()=>setGameOver(true))
@@ -47,8 +48,11 @@ export function Game({story, keyDevelopments}: {story:string, keyDevelopments:st
 
 async function reportInput(input:PlayerInput){
   if (engine){
+    setFetchingFrames(true)
     await engine.handleInput(input)
-    setFrames(await engine.getFrames())
+    const frames = await engine.getFrames()
+    setFrames(frames)
+    setFetchingFrames(false)
   }
   else throw("game engine is not initialized")
   
@@ -60,11 +64,11 @@ async function reportInput(input:PlayerInput){
   return frame ? <div className="app">
     <h1>Alive health {frame.playerStatus.health}</h1>
     <div className="canvas">
-      <Scene
+      {fetchingFrames? <div className="scene"><p>Thinking...</p></div> : <Scene
         scene={frame.scene}
         onFinish={popInformationFrame}
         onInput={reportInput}
-      />
+      />}
       <Inventory
         inventory={frame?.inventory}
         equipedWeapon={frame.playerStatus.equipedWeapon}
