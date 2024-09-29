@@ -7,7 +7,7 @@ const pydantic_schemata = fs.readFileSync('../pydantic_models/models.pydantic', 
 console.debug("got from pydantic", pydantic_schemata)
 
 const OPEN_AI_MODELS= {3.5: 'gpt-3.5-turbo-1106',  4:'gpt-4-1106-preview'}
-const OPEN_AI_MODEL = OPEN_AI_MODELS[3.5] //change model here
+const OPEN_AI_MODEL = OPEN_AI_MODELS[4] //change model here
 type CHATGPTMessage = OpenAI.Chat.Completions.ChatCompletionMessageParam
 
 

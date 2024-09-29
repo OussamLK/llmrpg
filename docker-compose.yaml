@@ -1,0 +1,21 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend 
+    expose:
+      - 3000
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+  frontend:
+    depends_on:
+      - backend
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    expose:
+      - 5173
+    ports:
+      - 80:5173
+    environment:
+      BACKEND_ADDRESS: http://backend:3000
